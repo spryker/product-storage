@@ -7,21 +7,10 @@
 
 namespace Spryker\Client\ProductStorage\Dependency\Client;
 
-interface ProductStorageToStorageClientInterface
+interface ProductToLocaleInterface
 {
-
     /**
-     * @param string $key
-     *
-     * @return array
+     * @return string
      */
-    public function get($key);
-
-    /**
-     * @param array $keys
-     *
-     * @return array
-     */
-    public function getMulti(array $keys);
-
+    public function getCurrentLocale();
 }
