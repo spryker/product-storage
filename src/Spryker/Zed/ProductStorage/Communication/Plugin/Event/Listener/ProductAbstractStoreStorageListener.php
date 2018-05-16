@@ -7,9 +7,9 @@
 
 namespace Spryker\Zed\ProductStorage\Communication\Plugin\Event\Listener;
 
+use Orm\Zed\Product\Persistence\Map\SpyProductAbstractStoreTableMap;
 use Spryker\Zed\Event\Dependency\Plugin\EventBulkHandlerInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
-use Spryker\Zed\Product\Dependency\ProductEvents;
 use Spryker\Zed\PropelOrm\Business\Transaction\DatabaseTransactionHandlerTrait;
 
 /**
@@ -17,7 +17,7 @@ use Spryker\Zed\PropelOrm\Business\Transaction\DatabaseTransactionHandlerTrait;
  * @method \Spryker\Zed\ProductStorage\Communication\ProductStorageCommunicationFactory getFactory()
  * @method \Spryker\Zed\ProductStorage\Business\ProductStorageFacadeInterface getFacade()
  */
-class ProductConcreteStorageListener extends AbstractPlugin implements EventBulkHandlerInterface
+class ProductAbstractStoreStorageListener extends AbstractPlugin implements EventBulkHandlerInterface
 {
     use DatabaseTransactionHandlerTrait;
 
@@ -32,14 +32,10 @@ class ProductConcreteStorageListener extends AbstractPlugin implements EventBulk
     public function handleBulk(array $eventTransfers, $eventName)
     {
         $this->preventTransaction();
-        $productIds = $this->getFactory()->getEventBehaviorFacade()->getEventTransferIds($eventTransfers);
+        $productAbstractIds = $this->getFactory()
+            ->getEventBehaviorFacade()
+            ->getEventTransferForeignKeys($eventTransfers, SpyProductAbstractStoreTableMap::COL_FK_PRODUCT_ABSTRACT);
 
-        if ($eventName === ProductEvents::ENTITY_SPY_PRODUCT_DELETE ||
-            $eventName === ProductEvents::PRODUCT_CONCRETE_UNPUBLISH
-        ) {
-            $this->getFacade()->unpublishConcreteProducts($productIds);
-        } else {
-            $this->getFacade()->publishConcreteProducts($productIds);
-        }
+        $this->getFacade()->publishAbstractProducts($productAbstractIds);
     }
 }
