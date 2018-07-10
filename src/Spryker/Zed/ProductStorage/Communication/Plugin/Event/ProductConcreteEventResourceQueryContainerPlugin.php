@@ -7,8 +7,8 @@
 
 namespace Spryker\Zed\ProductStorage\Communication\Plugin\Event;
 
-use Orm\Zed\Product\Persistence\Map\SpyProductAbstractLocalizedAttributesTableMap;
-use Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery;
+use Orm\Zed\Product\Persistence\Map\SpyProductLocalizedAttributesTableMap;
+use Orm\Zed\Product\Persistence\SpyProductLocalizedAttributesQuery;
 use Spryker\Shared\ProductStorage\ProductStorageConstants;
 use Spryker\Zed\EventBehavior\Dependency\Plugin\EventResourceQueryContainerPluginInterface;
 use Spryker\Zed\Kernel\Communication\AbstractPlugin;
@@ -19,7 +19,7 @@ use Spryker\Zed\Product\Dependency\ProductEvents;
  * @method \Spryker\Zed\ProductStorage\Business\ProductStorageFacadeInterface getFacade()
  * @method \Spryker\Zed\ProductStorage\Communication\ProductStorageCommunicationFactory getFactory()
  */
-class ProductAbstractEventResourcePlugin extends AbstractPlugin implements EventResourceQueryContainerPluginInterface
+class ProductConcreteEventResourceQueryContainerPlugin extends AbstractPlugin implements EventResourceQueryContainerPluginInterface
 {
     /**
      * Specification:
@@ -31,7 +31,7 @@ class ProductAbstractEventResourcePlugin extends AbstractPlugin implements Event
      */
     public function getResourceName(): string
     {
-        return ProductStorageConstants::PRODUCT_ABSTRACT_RESOURCE_NAME;
+        return ProductStorageConstants::PRODUCT_CONCRETE_RESOURCE_NAME;
     }
 
     /**
@@ -43,11 +43,11 @@ class ProductAbstractEventResourcePlugin extends AbstractPlugin implements Event
      *
      * @param int[] $ids
      *
-     * @return \Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery
+     * @return \Orm\Zed\Product\Persistence\SpyProductLocalizedAttributesQuery
      */
-    public function queryData(array $ids = []): SpyProductAbstractLocalizedAttributesQuery
+    public function queryData(array $ids = []): SpyProductLocalizedAttributesQuery
     {
-        $query = $this->getQueryContainer()->queryProductAbstractByIds($ids);
+        $query = $this->getQueryContainer()->queryProductConcreteByIds($ids);
 
         if (empty($ids)) {
             $query->clear();
@@ -66,7 +66,7 @@ class ProductAbstractEventResourcePlugin extends AbstractPlugin implements Event
      */
     public function getEventName(): string
     {
-        return ProductEvents::PRODUCT_ABSTRACT_PUBLISH;
+        return ProductEvents::PRODUCT_CONCRETE_PUBLISH;
     }
 
     /**
@@ -79,6 +79,6 @@ class ProductAbstractEventResourcePlugin extends AbstractPlugin implements Event
      */
     public function getIdColumnName(): string
     {
-        return SpyProductAbstractLocalizedAttributesTableMap::COL_FK_PRODUCT_ABSTRACT;
+        return SpyProductLocalizedAttributesTableMap::COL_FK_PRODUCT;
     }
 }
