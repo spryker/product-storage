@@ -106,14 +106,14 @@ class ProductConcreteStorageWriter implements ProductConcreteStorageWriterInterf
     }
 
     /**
-     * @param array<int> $productIds
+     * @param array<int> $productConcreteIds
      *
      * @return void
      */
-    public function publish(array $productIds)
+    public function publish(array $productConcreteIds)
     {
-        $productConcreteLocalizedEntities = $this->findProductConcreteLocalizedEntities($productIds);
-        $productConcreteStorageEntities = $this->findProductConcreteStorageEntities($productIds);
+        $productConcreteLocalizedEntities = $this->findProductConcreteLocalizedEntities($productConcreteIds);
+        $productConcreteStorageEntities = $this->findProductConcreteStorageEntities($productConcreteIds);
 
         if (!$productConcreteLocalizedEntities) {
             $this->deleteProductConcreteStorageEntities($productConcreteStorageEntities);
@@ -125,13 +125,13 @@ class ProductConcreteStorageWriter implements ProductConcreteStorageWriterInterf
     }
 
     /**
-     * @param array<int> $productIds
+     * @param array<int> $productConcreteIds
      *
      * @return void
      */
-    public function unpublish(array $productIds)
+    public function unpublish(array $productConcreteIds)
     {
-        $productConcreteStorageEntities = $this->findProductConcreteStorageEntities($productIds);
+        $productConcreteStorageEntities = $this->findProductConcreteStorageEntities($productConcreteIds);
 
         $this->deleteProductConcreteStorageEntities($productConcreteStorageEntities);
     }
@@ -387,7 +387,6 @@ class ProductConcreteStorageWriter implements ProductConcreteStorageWriterInterf
      */
     protected function loadSuperAttributes()
     {
-        /** @var \Propel\Runtime\Collection\ObjectCollection|\Orm\Zed\Product\Persistence\SpyProductAttributeKey[] $superAttributes */
         $superAttributes = $this->queryContainer
             ->queryProductAttributeKey()
             ->find();

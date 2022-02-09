@@ -266,10 +266,9 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         }
 
         if (ProductStorageConfig::isCollectorCompatibilityMode()) {
-            $clientLocatorClass = Locator::class;
-            /** @var \Generated\Zed\Ide\AutoCompletion&\Spryker\Shared\Kernel\LocatorLocatorInterface $locator */
-            $locator = $clientLocatorClass::getInstance();
-            $productClient = $locator->product()->client();
+            $clientLocatorClassName = Locator::class;
+            /** @var \Spryker\Client\Product\ProductClientInterface $productClient */
+            $productClient = $clientLocatorClassName::getInstance()->product()->client();
             $collectorData = $productClient->getProductAbstractFromStorageByIdForCurrentLocale($idProductAbstract);
 
             unset($collectorData['prices'], $collectorData['categories'], $collectorData['imageSets']);
@@ -619,10 +618,9 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
      */
     protected function getBulkProductAbstractStorageDataForCollectorCompatibilityMode(array $productAbstractIds, string $localeName): array
     {
-        $clientLocatorClass = Locator::class;
-        /** @var \Generated\Zed\Ide\AutoCompletion&\Spryker\Shared\Kernel\LocatorLocatorInterface $locator */
-        $locator = $clientLocatorClass::getInstance();
-        $productClient = $locator->product()->client();
+        $clientLocatorClassName = Locator::class;
+        /** @var \Spryker\Client\Product\ProductClientInterface $productClient */
+        $productClient = $clientLocatorClassName::getInstance()->product()->client();
 
         $collectorData = [];
         foreach ($productAbstractIds as $idProductAbstract) {
