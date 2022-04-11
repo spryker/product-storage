@@ -7,8 +7,6 @@
 
 namespace Spryker\Zed\ProductStorage\Business;
 
-use Generated\Shared\Transfer\ProductAbstractStorageTransfer;
-
 interface ProductStorageFacadeInterface
 {
     /**
@@ -62,20 +60,4 @@ interface ProductStorageFacadeInterface
      * @return void
      */
     public function unpublishConcreteProducts(array $productIds);
-
-    /**
-     * Specification:
-     * - Expands and returns the provided ProductAbstractStorage transfer object.
-     * - Expands the provided ProductAbstractStorage transfer object with upcs from concrete products.
-     * - Sets ProductAbstractStorage upcs attribute from related concrete products' upcs.
-     *
-     * @api
-     *
-     * @param \Generated\Shared\Transfer\ProductAbstractStorageTransfer $productAbstractStorageTransfer
-     *
-     * @return \Generated\Shared\Transfer\ProductAbstractStorageTransfer
-     */
-    public function expandUpcsProductAbstractStorage(
-        ProductAbstractStorageTransfer $productAbstractStorageTransfer
-    ): ProductAbstractStorageTransfer;
 }
