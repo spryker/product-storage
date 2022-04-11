@@ -70,7 +70,6 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
     public function provideCommunicationLayerDependencies(Container $container)
     {
         $container = $this->addEventBehaviorFacade($container);
-        $container = $this->addProductFacade($container);
 
         return $container;
     }
