@@ -13,6 +13,8 @@ use Spryker\Zed\ProductStorage\Business\Filter\SingleValueSuperAttributeFilter;
 use Spryker\Zed\ProductStorage\Business\Filter\SingleValueSuperAttributeFilterInterface;
 use Spryker\Zed\ProductStorage\Business\Storage\ProductAbstractStorageWriter;
 use Spryker\Zed\ProductStorage\Business\Storage\ProductConcreteStorageWriter;
+use Spryker\Zed\ProductStorage\Business\StorageExpander\UpcsProductAbstractStorageExpander;
+use Spryker\Zed\ProductStorage\Business\StorageExpander\UpcsProductAbstractStorageExpanderInterface;
 use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface;
 use Spryker\Zed\ProductStorage\ProductStorageDependencyProvider;
 
@@ -119,5 +121,13 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
     public function getProductConcreteStorageCollectionFilterPlugins(): array
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::PLUGINS_PRODUCT_CONCRETE_STORAGE_COLLECTION_FILTER);
+    }
+
+    /**
+     * @return \Spryker\Zed\ProductStorage\Business\StorageExpander\UpcsProductAbstractStorageExpanderInterface
+     */
+    public function createUpcsProductAbstractStorageExpander(): UpcsProductAbstractStorageExpanderInterface
+    {
+        return new UpcsProductAbstractStorageExpander($this->getProductFacade());
     }
 }
