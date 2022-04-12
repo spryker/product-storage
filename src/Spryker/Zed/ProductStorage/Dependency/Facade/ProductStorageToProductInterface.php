@@ -32,11 +32,4 @@ interface ProductStorageToProductInterface
      * @return array
      */
     public function generateAttributePermutations(array $superAttributes, $idProductConcrete);
-
-    /**
-     * @param int $idProductAbstract
-     *
-     * @return array<\Generated\Shared\Transfer\ProductConcreteTransfer>
-     */
-    public function getConcreteProductsByAbstractProductId(int $idProductAbstract);
 }

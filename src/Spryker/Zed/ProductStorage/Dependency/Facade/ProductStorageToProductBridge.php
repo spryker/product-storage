@@ -54,14 +54,4 @@ class ProductStorageToProductBridge implements ProductStorageToProductInterface
     {
         return $this->productFacade->generateAttributePermutations($superAttributes, $idProductConcrete);
     }
-
-    /**
-     * @param int $idProductAbstract
-     *
-     * @return array<\Generated\Shared\Transfer\ProductConcreteTransfer>
-     */
-    public function getConcreteProductsByAbstractProductId(int $idProductAbstract)
-    {
-        return $this->productFacade->getConcreteProductsByAbstractProductId($idProductAbstract);
-    }
 }
