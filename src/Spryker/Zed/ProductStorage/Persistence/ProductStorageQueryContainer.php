@@ -39,7 +39,6 @@ class ProductStorageQueryContainer extends AbstractQueryContainer implements Pro
             ->joinWithLocale()
             ->joinWithSpyProductAbstract()
             ->useSpyProductAbstractQuery()
-                ->joinWithSpyProduct()
                 ->joinWithSpyProductAbstractStore()
                 ->useSpyProductAbstractStoreQuery()
                     ->joinWithSpyStore()

@@ -95,6 +95,11 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
     protected $productAbstractStorageCollectionFilterPlugins = [];
 
     /**
+     * @var array
+     */
+    private static array $activeMap = [];
+
+    /**
      * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface $productFacade
      * @param \Spryker\Zed\ProductStorage\Business\Attribute\AttributeMapInterface $attributeMap
      * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageQueryContainerInterface $queryContainer
@@ -376,13 +381,22 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
      */
     protected function isActive(array $productAbstractLocalizedEntity)
     {
-        foreach ($productAbstractLocalizedEntity['SpyProductAbstract']['SpyProducts'] as $productEntity) {
-            if ($productEntity['is_active']) {
-                return true;
+        $idProductAbstract = $productAbstractLocalizedEntity['fk_product_abstract'];
+
+        if (!array_key_exists($idProductAbstract, self::$activeMap)) {
+            $activeConcretesCount = $this->queryContainer
+                ->queryProductConcreteByProductIds([$idProductAbstract])
+                ->filterByIsActive(true)
+                ->count();
+
+            if ($activeConcretesCount > 0) {
+                self::$activeMap[$idProductAbstract] = true;
+            } else {
+                self::$activeMap[$idProductAbstract] = false;
             }
         }
 
-        return false;
+        return self::$activeMap[$idProductAbstract];
     }
 
     /**
