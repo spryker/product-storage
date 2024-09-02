@@ -389,11 +389,7 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
                 ->filterByIsActive(true)
                 ->count();
 
-            if ($activeConcretesCount > 0) {
-                static::$activeAbstractsMap[$idProductAbstract] = true;
-            } else {
-                static::$activeAbstractsMap[$idProductAbstract] = false;
-            }
+            static::$activeAbstractsMap[$idProductAbstract] = $activeConcretesCount > 0;
         }
 
         return static::$activeAbstractsMap[$idProductAbstract];

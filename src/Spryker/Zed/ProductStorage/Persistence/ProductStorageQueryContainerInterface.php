@@ -7,6 +7,7 @@
 
 namespace Spryker\Zed\ProductStorage\Persistence;
 
+use Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery;
 use Orm\Zed\Product\Persistence\SpyProductAbstractQuery;
 use Orm\Zed\Product\Persistence\SpyProductQuery;
 use Spryker\Zed\Kernel\Persistence\QueryContainer\QueryContainerInterface;
@@ -37,7 +38,7 @@ interface ProductStorageQueryContainerInterface extends QueryContainerInterface
      *
      * @return \Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery
      */
-    public function queryProductAbstractsByIds(array $productAbstractIds);
+    public function queryProductAbstractsByIds(array $productAbstractIds): SpyProductAbstractLocalizedAttributesQuery;
 
     /**
      * Specification:
