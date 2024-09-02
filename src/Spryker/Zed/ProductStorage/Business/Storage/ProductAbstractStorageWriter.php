@@ -97,7 +97,7 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
     /**
      * @var array
      */
-    private static array $activeMap = [];
+    protected static array $activeAbstractsMap = [];
 
     /**
      * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface $productFacade
@@ -383,20 +383,20 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
     {
         $idProductAbstract = $productAbstractLocalizedEntity['fk_product_abstract'];
 
-        if (!array_key_exists($idProductAbstract, self::$activeMap)) {
+        if (!array_key_exists($idProductAbstract, static::$activeAbstractsMap)) {
             $activeConcretesCount = $this->queryContainer
                 ->queryProductConcreteByProductIds([$idProductAbstract])
                 ->filterByIsActive(true)
                 ->count();
 
             if ($activeConcretesCount > 0) {
-                self::$activeMap[$idProductAbstract] = true;
+                static::$activeAbstractsMap[$idProductAbstract] = true;
             } else {
-                self::$activeMap[$idProductAbstract] = false;
+                static::$activeAbstractsMap[$idProductAbstract] = false;
             }
         }
 
-        return self::$activeMap[$idProductAbstract];
+        return static::$activeAbstractsMap[$idProductAbstract];
     }
 
     /**
@@ -534,7 +534,7 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
      */
     protected function findProductAbstractLocalizedEntities(array $productAbstractIds)
     {
-        return $this->queryContainer->queryProductAbstractByIds($productAbstractIds)->find()->getData();
+        return $this->queryContainer->queryProductAbstractsByIds($productAbstractIds)->find()->getData();
     }
 
     /**
