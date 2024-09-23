@@ -11,6 +11,7 @@ use Orm\Zed\Product\Persistence\Map\SpyProductAbstractLocalizedAttributesTableMa
 use Orm\Zed\Product\Persistence\Map\SpyProductAttributeKeyTableMap;
 use Orm\Zed\Product\Persistence\Map\SpyProductLocalizedAttributesTableMap;
 use Orm\Zed\Product\Persistence\Map\SpyProductTableMap;
+use Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery;
 use Orm\Zed\Product\Persistence\SpyProductAbstractQuery;
 use Orm\Zed\Product\Persistence\SpyProductQuery;
 use Orm\Zed\Url\Persistence\Map\SpyUrlTableMap;
@@ -26,6 +27,8 @@ class ProductStorageQueryContainer extends AbstractQueryContainer implements Pro
     /**
      * {@inheritDoc}
      *
+     * @deprecated Use {@link \Spryker\Zed\ProductStorage\Persistence\ProductStorageQueryContainerInterface::queryProductAbstractsByIds()} for better performance.
+     *
      * @api
      *
      * @param array<int> $productAbstractIds
@@ -40,6 +43,39 @@ class ProductStorageQueryContainer extends AbstractQueryContainer implements Pro
             ->joinWithSpyProductAbstract()
             ->useSpyProductAbstractQuery()
                 ->joinWithSpyProduct()
+                ->joinWithSpyProductAbstractStore()
+                ->useSpyProductAbstractStoreQuery()
+                    ->joinWithSpyStore()
+                ->endUse()
+            ->endUse()
+            ->filterByFkProductAbstract_In($productAbstractIds)
+            ->setFormatter(ModelCriteria::FORMAT_ARRAY);
+
+        /** @var \Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery $query */
+        $query = $query
+            ->join('SpyProductAbstract.SpyUrl')
+            ->addJoinCondition('SpyUrl', 'spy_url.fk_locale = ' . SpyProductAbstractLocalizedAttributesTableMap::COL_FK_LOCALE)
+            ->withColumn(SpyUrlTableMap::COL_URL, 'url');
+
+        return $query;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param array<int> $productAbstractIds
+     *
+     * @return \Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery
+     */
+    public function queryProductAbstractsByIds(array $productAbstractIds): SpyProductAbstractLocalizedAttributesQuery
+    {
+        $query = $this->getFactory()->getProductQueryContainer()
+            ->queryAllProductAbstractLocalizedAttributes()
+            ->joinWithLocale()
+            ->joinWithSpyProductAbstract()
+            ->useSpyProductAbstractQuery()
                 ->joinWithSpyProductAbstractStore()
                 ->useSpyProductAbstractStoreQuery()
                     ->joinWithSpyStore()
