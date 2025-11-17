@@ -64,6 +64,7 @@
     </transfer>
 
     <transfer name="ProductConcrete">
+        <property name="idProductConcrete" type="int"/>
         <property name="fkProductAbstract" type="int"/>
         <property name="localizedAttributes" type="LocalizedAttributes[]" singular="localizedAttributes"/>
     </transfer>
@@ -112,6 +113,23 @@
     <transfer name="HydrateEventsResponse">
         <property name="idTimestampMap" type="array" associative="true" singular="id" description="Map of event entity IDs to their corresponding timestamps"/>
         <property name="foreignKeyTimestampMap" type="array" associative="true" singular="foreignKey" description="Map of foreign key values to their corresponding timestamps"/>
+    </transfer>
+
+    <transfer name="ProductAbstractReadinessRequest" strict="true">
+        <property name="productAbstract" type="ProductAbstract"/>
+    </transfer>
+
+    <transfer name="ProductConcreteReadinessRequest" strict="true">
+        <property name="productConcrete" type="ProductConcrete"/>
+    </transfer>
+
+    <transfer name="ProductReadiness" strict="true">
+        <property name="title" type="string"/>
+        <property name="values" type="string[]" singular="value"/>
+    </transfer>
+
+    <transfer name="ProductAbstract">
+        <property name="idProductAbstract" type="int"/>
     </transfer>
 
 </transfers>

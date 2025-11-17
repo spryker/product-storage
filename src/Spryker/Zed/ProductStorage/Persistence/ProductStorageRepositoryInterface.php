@@ -24,6 +24,13 @@ interface ProductStorageRepositoryInterface
     public function getProductAbstractsByIds(array $productAbstractIds): array;
 
     /**
+     * @param array<int> $productConcreteIds
+     *
+     * @return array<mixed>
+     */
+    public function getProductConcretesByIds(array $productConcreteIds): array;
+
+    /**
      * @param array<int> $idProductAbstract
      *
      * @return array<array<string, int>>

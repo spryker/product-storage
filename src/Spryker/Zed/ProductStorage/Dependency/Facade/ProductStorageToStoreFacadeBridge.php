@@ -31,4 +31,12 @@ class ProductStorageToStoreFacadeBridge implements ProductStorageToStoreFacadeIn
     {
         return $this->storeFacade->getStoreByName($storeName);
     }
+
+    /**
+     * @return array<\Generated\Shared\Transfer\StoreTransfer>
+     */
+    public function getAllStores(): array
+    {
+        return $this->storeFacade->getAllStores();
+    }
 }

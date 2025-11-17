@@ -7,10 +7,17 @@
 
 namespace Spryker\Zed\ProductStorage\Business;
 
+use Spryker\Client\ProductStorage\ProductStorageClientInterface;
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 use Spryker\Zed\ProductStorage\Business\Attribute\AttributeMap;
 use Spryker\Zed\ProductStorage\Business\Filter\SingleValueSuperAttributeFilter;
 use Spryker\Zed\ProductStorage\Business\Filter\SingleValueSuperAttributeFilterInterface;
+use Spryker\Zed\ProductStorage\Business\Provider\ProductAbstractReadinessProviderInterface;
+use Spryker\Zed\ProductStorage\Business\Provider\ProductConcreteReadinessProviderInterface;
+use Spryker\Zed\ProductStorage\Business\Provider\StorageProductAbstractReadinessProvider;
+use Spryker\Zed\ProductStorage\Business\Provider\StorageProductConcreteReadinessProvider;
+use Spryker\Zed\ProductStorage\Business\Provider\StorageTableProductAbstractReadinessProvider;
+use Spryker\Zed\ProductStorage\Business\Provider\StorageTableProductConcreteReadinessProvider;
 use Spryker\Zed\ProductStorage\Business\Publisher\ProductAbstractStoragePublisher;
 use Spryker\Zed\ProductStorage\Business\Publisher\ProductAbstractStoragePublisherInterface;
 use Spryker\Zed\ProductStorage\Business\Storage\ProductAbstractStorageWriter;
@@ -144,5 +151,57 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
     public function getProductConcreteStorageCollectionFilterPlugins(): array
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::PLUGINS_PRODUCT_CONCRETE_STORAGE_COLLECTION_FILTER);
+    }
+
+    /**
+     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductAbstractReadinessProviderInterface
+     */
+    public function createStorageTableProductAbstractReadinessProvider(): ProductAbstractReadinessProviderInterface
+    {
+        return new StorageTableProductAbstractReadinessProvider(
+            $this->getRepository(),
+            $this->getStoreFacade(),
+        );
+    }
+
+    /**
+     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductAbstractReadinessProviderInterface
+     */
+    public function createStorageProductAbstractReadinessProvider(): ProductAbstractReadinessProviderInterface
+    {
+        return new StorageProductAbstractReadinessProvider(
+            $this->getProductStorageClient(),
+            $this->getStoreFacade(),
+        );
+    }
+
+    /**
+     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductConcreteReadinessProviderInterface
+     */
+    public function createStorageTableProductConcreteReadinessProvider(): ProductConcreteReadinessProviderInterface
+    {
+        return new StorageTableProductConcreteReadinessProvider(
+            $this->getRepository(),
+            $this->getStoreFacade(),
+        );
+    }
+
+    /**
+     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductConcreteReadinessProviderInterface
+     */
+    public function createStorageProductConcreteReadinessProvider(): ProductConcreteReadinessProviderInterface
+    {
+        return new StorageProductConcreteReadinessProvider(
+            $this->getProductStorageClient(),
+            $this->getStoreFacade(),
+        );
+    }
+
+    /**
+     * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface
+     */
+    protected function getProductStorageClient(): ProductStorageClientInterface
+    {
+        return $this->getProvidedDependency(ProductStorageDependencyProvider::CLIENT_PRODUCT_STORAGE);
     }
 }

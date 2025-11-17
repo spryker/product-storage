@@ -8,7 +8,9 @@
 namespace Spryker\Zed\ProductStorage;
 
 use Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery;
+use Orm\Zed\Product\Persistence\SpyProductLocalizedAttributesQuery;
 use Orm\Zed\Product\Persistence\SpyProductQuery;
+use Spryker\Client\ProductStorage\ProductStorageClientInterface;
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
 use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToEventBehaviorFacadeBridge;
@@ -47,6 +49,11 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
     /**
      * @var string
      */
+    public const CLIENT_PRODUCT_STORAGE = 'CLIENT_PRODUCT_STORAGE';
+
+    /**
+     * @var string
+     */
     public const PLUGINS_PRODUCT_ABSTRACT_STORAGE_EXPANDER = 'PLUGINS_PRODUCT_ABSTRACT_STORAGE_EXPANDER';
 
     /**
@@ -75,6 +82,11 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
     public const PROPEL_QUERY_PRODUCT_ABSTRACT_LOCALIZED_ATTRIBUTES = 'PROPEL_QUERY_PRODUCT_ABSTRACT_LOCALIZED_ATTRIBUTES';
 
     /**
+     * @var string
+     */
+    public const PROPEL_QUERY_PRODUCT_LOCALIZED_ATTRIBUTES = 'PROPEL_QUERY_PRODUCT_LOCALIZED_ATTRIBUTES';
+
+    /**
      * @param \Spryker\Zed\Kernel\Container $container
      *
      * @return \Spryker\Zed\Kernel\Container
@@ -95,6 +107,7 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container = $this->addProductFacade($container);
         $container = $this->addStoreFacade($container);
+        $container = $this->addProductStorageClient($container);
         $container = $this->addProductAbstractStorageExpanderPlugins($container);
         $container = $this->addProductConcreteStorageCollectionExpanderPlugins($container);
         $container = $this->addProductAbstractStorageCollectionFilterPlugins($container);
@@ -117,6 +130,7 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
 
         $container = $this->addProductPropelQuery($container);
         $container = $this->addProductAbstractLocalizedAttributesPropelQuery($container);
+        $container = $this->addProductLocalizedAttributesPropelQuery($container);
 
         return $container;
     }
@@ -158,6 +172,20 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::FACADE_STORE, function (Container $container): ProductStorageToStoreFacadeInterface {
             return new ProductStorageToStoreFacadeBridge($container->getLocator()->store()->facade());
+        });
+
+        return $container;
+    }
+
+    /**
+     * @param \Spryker\Zed\Kernel\Container $container
+     *
+     * @return \Spryker\Zed\Kernel\Container
+     */
+    protected function addProductStorageClient(Container $container): Container
+    {
+        $container->set(static::CLIENT_PRODUCT_STORAGE, function (Container $container): ProductStorageClientInterface {
+            return $container->getLocator()->productStorage()->client();
         });
 
         return $container;
@@ -274,6 +302,20 @@ class ProductStorageDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::PROPEL_QUERY_PRODUCT_ABSTRACT_LOCALIZED_ATTRIBUTES, $container->factory(function (): SpyProductAbstractLocalizedAttributesQuery {
             return SpyProductAbstractLocalizedAttributesQuery::create();
+        }));
+
+        return $container;
+    }
+
+    /**
+     * @param \Spryker\Zed\Kernel\Container $container
+     *
+     * @return \Spryker\Zed\Kernel\Container
+     */
+    protected function addProductLocalizedAttributesPropelQuery(Container $container): Container
+    {
+        $container->set(static::PROPEL_QUERY_PRODUCT_LOCALIZED_ATTRIBUTES, $container->factory(function (): SpyProductLocalizedAttributesQuery {
+            return SpyProductLocalizedAttributesQuery::create();
         }));
 
         return $container;

@@ -41,10 +41,11 @@ interface ProductStorageClientInterface
      *
      * @param int $idProductAbstract
      * @param string $localeName
+     * @param string|null $storeName
      *
      * @return array|null
      */
-    public function findProductAbstractStorageData(int $idProductAbstract, string $localeName): ?array;
+    public function findProductAbstractStorageData(int $idProductAbstract, string $localeName, ?string $storeName = null): ?array;
 
     /**
      * Specification:

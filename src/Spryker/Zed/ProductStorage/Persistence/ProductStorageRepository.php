@@ -77,6 +77,20 @@ class ProductStorageRepository extends AbstractRepository implements ProductStor
     }
 
     /**
+     * @param array<int> $productConcreteIds
+     *
+     * @return array<mixed>
+     */
+    public function getProductConcretesByIds(array $productConcreteIds): array
+    {
+        return $this->getFactory()->createSpyProductConcreteStorageQuery()
+            ->filterByFkProduct_In($productConcreteIds)
+            ->setFormatter(ModelCriteria::FORMAT_ARRAY)
+            ->find()
+            ->getData();
+    }
+
+    /**
      * @param array<int> $idProductAbstracts
      *
      * @return array<array<string, int>>
