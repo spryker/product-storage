@@ -170,9 +170,9 @@ class ProductStorageRepository extends AbstractRepository implements ProductStor
     /**
      * @module Product
      *
-     * @param list<int> $productIds
+     * @param array<int> $productIds
      *
-     * @return list<int>
+     * @return array<int>
      */
     public function getProductAbstractIdsByProductIds(array $productIds): array
     {

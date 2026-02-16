@@ -76,9 +76,9 @@ interface ProductStorageRepositoryInterface
     public function getRelevantProductAbstractIdsToUpdate(array $productAbstractIdTimestampMap): array;
 
     /**
-     * @param list<int> $productIds
+     * @param array<int> $productIds
      *
-     * @return list<int>
+     * @return array<int>
      */
     public function getProductAbstractIdsByProductIds(array $productIds): array;
 }

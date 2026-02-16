@@ -210,8 +210,8 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
     }
 
     /**
-     * @param list<\Generated\Shared\Transfer\ProductViewTransfer> $productViewTransfers
-     * @param list<int> $productIds
+     * @param array<\Generated\Shared\Transfer\ProductViewTransfer> $productViewTransfers
+     * @param array<int> $productIds
      *
      * @return list<\Generated\Shared\Transfer\ProductViewTransfer>
      */
