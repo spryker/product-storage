@@ -56,9 +56,6 @@ class ProductStorageToProductQueryContainerBridge implements ProductStorageToPro
         return $this->productQueryContainer->queryProduct();
     }
 
-    /**
-     * @return \Orm\Zed\Product\Persistence\SpyProductAbstractQuery
-     */
     public function queryProductAbstract(): SpyProductAbstractQuery
     {
         return $this->productQueryContainer->queryProductAbstract();

@@ -75,9 +75,6 @@ class ProductStorageFacadeTest extends Unit
      */
     protected $tester;
 
-    /**
-     * @return void
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -150,11 +147,6 @@ class ProductStorageFacadeTest extends Unit
         );
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductConcreteTransfer $productConcreteTransfer1
-     *
-     * @return \Generated\Shared\Transfer\ProductConcreteTransfer
-     */
     protected function cloneProductConcrete(
         ProductConcreteTransfer $productConcreteTransfer1
     ): ProductConcreteTransfer {
@@ -180,9 +172,6 @@ class ProductStorageFacadeTest extends Unit
         return $productConcreteTransfer2;
     }
 
-    /**
-     * @return void
-     */
     protected function resetAttributeMapSuperAttributesCache(): void
     {
         $reflection = new ReflectionProperty(AttributeMap::class, 'superAttributesCache');
@@ -190,11 +179,6 @@ class ProductStorageFacadeTest extends Unit
         $reflection->setValue(null, null);
     }
 
-    /**
-     * @param bool $isProductAttributesWithSingleValueIncluded
-     *
-     * @return \Spryker\Zed\ProductStorage\Business\ProductStorageFacadeInterface
-     */
     protected function getProductStorageFacade(
         bool $isProductAttributesWithSingleValueIncluded = true
     ): ProductStorageFacadeInterface {

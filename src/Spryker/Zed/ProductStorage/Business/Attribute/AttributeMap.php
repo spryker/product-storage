@@ -50,12 +50,6 @@ class AttributeMap implements AttributeMapInterface
      */
     protected $singleValueSuperAttributeFilter;
 
-    /**
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface $productFacade
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageQueryContainerInterface $queryContainer
-     * @param \Spryker\Zed\ProductStorage\ProductStorageConfig $productStorageConfig
-     * @param \Spryker\Zed\ProductStorage\Business\Filter\SingleValueSuperAttributeFilterInterface $singleValueSuperAttributeFilter
-     */
     public function __construct(
         ProductStorageToProductInterface $productFacade,
         ProductStorageQueryContainerInterface $queryContainer,
@@ -106,11 +100,6 @@ class AttributeMap implements AttributeMapInterface
         return $attributeMapBulk;
     }
 
-    /**
-     * @param array $concreteProducts
-     *
-     * @return \Generated\Shared\Transfer\AttributeMapStorageTransfer
-     */
     protected function generateAttributeMapByConcreteProducts(array $concreteProducts): AttributeMapStorageTransfer
     {
         $concreteProductIds = $this->filterConcreteProductIds($concreteProducts);
@@ -162,11 +151,6 @@ class AttributeMap implements AttributeMapInterface
         );
     }
 
-    /**
-     * @param array $concreteProducts
-     *
-     * @return array
-     */
     protected function getIndexedConcreteProducts(array $concreteProducts): array
     {
         $indexedConcreteProducts = [];
@@ -199,12 +183,6 @@ class AttributeMap implements AttributeMapInterface
         return $attributeMapBulk[$key];
     }
 
-    /**
-     * @param int $idProductAbstract
-     * @param int $idLocale
-     *
-     * @return string
-     */
     protected function getProductAbstractLocaleKey(int $idProductAbstract, int $idLocale): string
     {
         return sprintf(static::KEY_ID_PRODUCT_ABSTRACT_FK_LOCALE, $idProductAbstract, $idLocale);
@@ -316,11 +294,6 @@ class AttributeMap implements AttributeMapInterface
         return $superAttributes;
     }
 
-    /**
-     * @param array $productAttributes
-     *
-     * @return array
-     */
     protected function filterSuperAttributes(array $productAttributes): array
     {
         return array_filter($productAttributes, function (string $attribute) {

@@ -11,10 +11,5 @@ use Generated\Shared\Transfer\ProductConcreteStorageTransfer;
 
 interface ProductConcreteStorageUrlBuilderInterface
 {
-    /**
-     * @param \Generated\Shared\Transfer\ProductConcreteStorageTransfer $productConcreteStorageTransfer
-     *
-     * @return string
-     */
     public function buildProductConcreteUrl(ProductConcreteStorageTransfer $productConcreteStorageTransfer): string;
 }

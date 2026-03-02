@@ -11,10 +11,5 @@ use Generated\Shared\Transfer\ProductConcreteTransfer;
 
 interface ProductStorageToProductConcreteTransferDataMapperInterface
 {
-    /**
-     * @param array $productConcreteStorageData
-     *
-     * @return \Generated\Shared\Transfer\ProductConcreteTransfer
-     */
     public function mapProductStorageDataToProductConcreteTransfer(array $productConcreteStorageData): ProductConcreteTransfer;
 }

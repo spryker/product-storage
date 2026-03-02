@@ -34,11 +34,6 @@ class ProductAbstractViewTransferFinder extends AbstractProductViewTransferFinde
      */
     protected $storeClient;
 
-    /**
-     * @param \Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReaderInterface $productAbstractStorage
-     * @param \Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapperInterface $productStorageDataMapper
-     * @param \Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStoreClientInterface $storeClient
-     */
     public function __construct(
         ProductAbstractStorageReaderInterface $productAbstractStorage,
         ProductStorageDataMapperInterface $productStorageDataMapper,
@@ -75,11 +70,6 @@ class ProductAbstractViewTransferFinder extends AbstractProductViewTransferFinde
             ->getBulkProductAbstractStorageDataByProductAbstractIdsForLocaleNameAndStore($productIds, $localeName, $storeName);
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return int
-     */
     protected function getProductId(ProductViewTransfer $productViewTransfer): int
     {
         return $productViewTransfer->getIdProductAbstract();

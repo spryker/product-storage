@@ -46,25 +46,16 @@ class ProductStoragePersistenceFactory extends AbstractPersistenceFactory
         return $this->getProvidedDependency(ProductStorageDependencyProvider::QUERY_CONTAINER_PRODUCT);
     }
 
-    /**
-     * @return \Orm\Zed\Product\Persistence\SpyProductQuery
-     */
     public function getProductPropelQuery(): SpyProductQuery
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::PROPEL_QUERY_PRODUCT);
     }
 
-    /**
-     * @return \Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery
-     */
     public function getProductAbstractLocalizedAttributesPropelQuery(): SpyProductAbstractLocalizedAttributesQuery
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::PROPEL_QUERY_PRODUCT_ABSTRACT_LOCALIZED_ATTRIBUTES);
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Persistence\Propel\Mapper\ProductStorageMapper
-     */
     public function createProductStorageMapper(): ProductStorageMapper
     {
         return new ProductStorageMapper();

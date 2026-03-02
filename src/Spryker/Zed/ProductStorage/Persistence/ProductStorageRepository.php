@@ -138,12 +138,6 @@ class ProductStorageRepository extends AbstractRepository implements ProductStor
         return array_merge(...$sitemapUrlTransfers);
     }
 
-    /**
-     * @param string $storeName
-     * @param int $limit
-     *
-     * @return \Generator
-     */
     public function getSitemapGeneratorUrls(string $storeName, int $limit): Generator
     {
         $offset = 0;

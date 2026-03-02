@@ -76,9 +76,6 @@ class UrlStorageProductAbstractMapperPlugin extends AbstractPlugin implements Ur
         return $this->getStorageKeyBuilder()->generateKey($synchronizationDataTransfer);
     }
 
-    /**
-     * @return string
-     */
     protected function getStoreName(): string
     {
         if (static::$storeName === null) {
@@ -91,9 +88,6 @@ class UrlStorageProductAbstractMapperPlugin extends AbstractPlugin implements Ur
         return static::$storeName;
     }
 
-    /**
-     * @return \Spryker\Service\Synchronization\Dependency\Plugin\SynchronizationKeyGeneratorPluginInterface
-     */
     protected function getStorageKeyBuilder(): SynchronizationKeyGeneratorPluginInterface
     {
         if (static::$storageKeyBuilder === null) {

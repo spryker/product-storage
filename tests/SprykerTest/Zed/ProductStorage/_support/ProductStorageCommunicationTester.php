@@ -46,9 +46,6 @@ class ProductStorageCommunicationTester extends Actor
      */
     public const PROJECT_SUITE = 'suite';
 
-    /**
-     * @return bool
-     */
     public function isSuiteProject(): bool
     {
         if (getenv(static::PARAM_PROJECT) === static::PROJECT_SUITE) {
@@ -96,11 +93,6 @@ class ProductStorageCommunicationTester extends Actor
         return Stub::makeEmpty(ProductStorageFacade::class);
     }
 
-    /**
-     * @param int $isAbstractProduct
-     *
-     * @return int|null
-     */
     public function getAbstractProductStorageEntityTimestamp(int $isAbstractProduct): ?int
     {
         $spyProductAbstractStorageEntity = SpyProductAbstractStorageQuery::create()->filterByFkProductAbstract($isAbstractProduct)->findOne();
@@ -108,11 +100,6 @@ class ProductStorageCommunicationTester extends Actor
         return $spyProductAbstractStorageEntity ? $spyProductAbstractStorageEntity->getUpdatedAt()->getTimestamp() : null;
     }
 
-    /**
-     * @param int $isProductConcrete
-     *
-     * @return int|null
-     */
     public function getProductConcreteStorageEntityTimestamp(int $isProductConcrete): ?int
     {
         $spyAbstractConcreteStorageEntity = SpyProductConcreteStorageQuery::create()->filterByFkProduct($isProductConcrete)->findOne();
@@ -120,51 +107,31 @@ class ProductStorageCommunicationTester extends Actor
         return $spyAbstractConcreteStorageEntity ? $spyAbstractConcreteStorageEntity->getUpdatedAt()->getTimestamp() : null;
     }
 
-    /**
-     * @param int $idProductAbstract
-     *
-     * @return \Orm\Zed\ProductStorage\Persistence\SpyProductAbstractStorage|null
-     */
     public function findProductAbstractStorageEntityByIdProductAbstract(int $idProductAbstract): ?SpyProductAbstractStorage
     {
         return $this->getProductAbstractStorageQuery()->findOneByFkProductAbstract($idProductAbstract);
     }
 
-    /**
-     * @return int
-     */
     public function countProductAbstractStorageEntities(): int
     {
         return $this->getProductAbstractStorageQuery()->count();
     }
 
-    /**
-     * @return void
-     */
     public function ensureProductAbstractStorageTableIsEmpty(): void
     {
         $this->ensureDatabaseTableIsEmpty($this->getProductAbstractStorageQuery());
     }
 
-    /**
-     * @return void
-     */
     public function ensureProductAbstractTableIsEmpty(): void
     {
         $this->ensureDatabaseTableIsEmpty($this->getProductAbstractQuery());
     }
 
-    /**
-     * @return \Orm\Zed\ProductStorage\Persistence\SpyProductAbstractStorageQuery
-     */
     protected function getProductAbstractStorageQuery(): SpyProductAbstractStorageQuery
     {
         return SpyProductAbstractStorageQuery::create();
     }
 
-    /**
-     * @return \Orm\Zed\Product\Persistence\SpyProductAbstractQuery
-     */
     protected function getProductAbstractQuery(): SpyProductAbstractQuery
     {
         return SpyProductAbstractQuery::create();

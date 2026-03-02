@@ -84,11 +84,6 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
         return $productViewTransfer;
     }
 
-    /**
-     * @param array $productStorageData
-     *
-     * @return array
-     */
     protected function filterAbstractProductVariantsData(array $productStorageData): array
     {
         return $this->productAbstractVariantsRestrictionFilter->filterAbstractProductVariantsData($productStorageData);
@@ -115,11 +110,6 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
         return $productViewTransfer;
     }
 
-    /**
-     * @param array $productStorageData
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer
-     */
     private function formatCollectorData(array $productStorageData): ProductViewTransfer
     {
         unset($productStorageData['prices'], $productStorageData['categories'], $productStorageData['imageSets']);
@@ -162,11 +152,6 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
         return $filteredData;
     }
 
-    /**
-     * @param \Spryker\Client\ProductStorageExtension\Dependency\Plugin\ProductViewExpanderPluginInterface $storageProductExpanderPlugin
-     *
-     * @return bool
-     */
     protected function filterProductStorageExpanderPlugins(ProductViewExpanderPluginInterface $storageProductExpanderPlugin): bool
     {
         return true;

@@ -342,12 +342,6 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
         return [$pairs, $mappedProductAbstractStorageEntities];
     }
 
-    /**
-     * @param string $storeName
-     * @param string $localeName
-     *
-     * @return bool
-     */
     protected function isValidStoreLocale(string $storeName, string $localeName): bool
     {
         return in_array($localeName, $this->storeFacade->getStoreByName($storeName)->getAvailableLocaleIsoCodes());
@@ -597,11 +591,6 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
         return $indexedProductAbstractStorageTransfers;
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductAbstractStorageTransfer $productAbstractStorageTransfer
-     *
-     * @return \Generated\Shared\Transfer\ProductAbstractStorageTransfer
-     */
     protected function executeProductAbstractStorageExpanderPlugins(
         ProductAbstractStorageTransfer $productAbstractStorageTransfer
     ): ProductAbstractStorageTransfer {

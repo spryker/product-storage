@@ -28,10 +28,6 @@ class ProductConcreteViewTransferFinder extends AbstractProductViewTransferFinde
      */
     protected static $productViewTransfersCache = [];
 
-    /**
-     * @param \Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReaderInterface $productConcreteStorage
-     * @param \Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapperInterface $productStorageDataMapper
-     */
     public function __construct(ProductConcreteStorageReaderInterface $productConcreteStorage, ProductStorageDataMapperInterface $productStorageDataMapper)
     {
         parent::__construct($productStorageDataMapper);
@@ -62,11 +58,6 @@ class ProductConcreteViewTransferFinder extends AbstractProductViewTransferFinde
             ->getBulkProductConcreteStorageDataByProductConcreteIdsAndLocaleName($productIds, $localeName);
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return int
-     */
     protected function getProductId(ProductViewTransfer $productViewTransfer): int
     {
         return $productViewTransfer->getIdProductConcrete();

@@ -283,11 +283,6 @@ class AttributeMapTest extends Unit
         return $spyProductQueryMock;
     }
 
-    /**
-     * @param array $superAttributesData
-     *
-     * @return \Orm\Zed\Product\Persistence\SpyProductAttributeKeyQuery
-     */
     protected function createSpyProductAttributeKeyQueryMock(array $superAttributesData): SpyProductAttributeKeyQuery
     {
         $spyProductAttributeKeyQueryMock = $this->getMockBuilder(SpyProductAttributeKeyQuery::class)->getMock();
@@ -344,9 +339,6 @@ class AttributeMapTest extends Unit
         return $this->tester->getLocator()->product()->facade()->generateAttributePermutations($productAttributes, $idProduct);
     }
 
-    /**
-     * @return void
-     */
     protected function resetSuperAttributesCache(): void
     {
         $reflection = new ReflectionProperty(AttributeMap::class, 'superAttributesCache');

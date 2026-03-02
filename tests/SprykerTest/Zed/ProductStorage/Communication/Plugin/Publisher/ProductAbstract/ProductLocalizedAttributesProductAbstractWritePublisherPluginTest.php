@@ -42,9 +42,6 @@ class ProductLocalizedAttributesProductAbstractWritePublisherPluginTest extends 
      */
     protected ProductStorageCommunicationTester $tester;
 
-    /**
-     * @return void
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -58,9 +55,6 @@ class ProductLocalizedAttributesProductAbstractWritePublisherPluginTest extends 
         $this->tester->ensureProductAbstractStorageTableIsEmpty();
     }
 
-    /**
-     * @return void
-     */
     public function testHandleBulkStoresProductAbstractStorageEntity(): void
     {
         // Arrange
@@ -81,9 +75,6 @@ class ProductLocalizedAttributesProductAbstractWritePublisherPluginTest extends 
         ));
     }
 
-    /**
-     * @return void
-     */
     public function testHandleBulkDoesNothingWhenIdProductConcreteIsNotPassedInEventEntityTransfer(): void
     {
         // Arrange
@@ -102,9 +93,6 @@ class ProductLocalizedAttributesProductAbstractWritePublisherPluginTest extends 
         $this->assertSame(0, $this->tester->countProductAbstractStorageEntities());
     }
 
-    /**
-     * @return void
-     */
     public function testHandleBulkDoesNothingWhenProductAbstractDoesNotExist(): void
     {
         // Arrange

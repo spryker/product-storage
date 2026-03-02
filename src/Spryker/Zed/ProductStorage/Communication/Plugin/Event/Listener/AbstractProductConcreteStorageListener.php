@@ -64,11 +64,6 @@ abstract class AbstractProductConcreteStorageListener extends AbstractPlugin imp
         static::$unpublishedProductConcreteIds = array_merge(static::$unpublishedProductConcreteIds, $productIds);
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\HydrateEventsRequestTransfer $hydrateEventsRequestTransfer
-     *
-     * @return \Generated\Shared\Transfer\HydrateEventsResponseTransfer
-     */
     protected function hydrateEventDataTransfer(HydrateEventsRequestTransfer $hydrateEventsRequestTransfer): HydrateEventsResponseTransfer
     {
         return $this->getFactory()->getEventBehaviorFacade()->hydrateEventDataTransfer($hydrateEventsRequestTransfer);

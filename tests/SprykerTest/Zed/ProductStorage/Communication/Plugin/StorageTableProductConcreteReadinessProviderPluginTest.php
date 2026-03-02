@@ -31,9 +31,6 @@ use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
  */
 class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
 {
-    /**
-     * @return void
-     */
     public function testProvideFormatsLocales(): void
     {
         // Arrange
@@ -55,9 +52,6 @@ class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
         $this->assertSame('de_DE, en_US, fr_FR', $productReadiness->getValues()[0]);
     }
 
-    /**
-     * @return void
-     */
     public function testProvideReturnsDashWhenNoLocalesProvided(): void
     {
         // Arrange
@@ -75,9 +69,6 @@ class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
         $this->assertSame('-', $result[0]->getValues()[0]);
     }
 
-    /**
-     * @return void
-     */
     public function testProvideRemovesDuplicateLocales(): void
     {
         // Arrange
@@ -96,11 +87,6 @@ class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
         $this->assertSame('de_DE, en_US', $result[0]->getValues()[0]);
     }
 
-    /**
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface $repositoryMock
-     *
-     * @return \Spryker\Zed\ProductStorage\Communication\Plugin\ProductManagement\StorageTableProductConcreteReadinessProviderPlugin
-     */
     protected function createPluginWithMocks(
         ProductStorageRepositoryInterface $repositoryMock
     ): StorageTableProductConcreteReadinessProviderPlugin {

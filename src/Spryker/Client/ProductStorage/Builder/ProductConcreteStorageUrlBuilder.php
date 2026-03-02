@@ -16,11 +16,6 @@ class ProductConcreteStorageUrlBuilder implements ProductConcreteStorageUrlBuild
      */
     protected const ATTRIBUTE_QUERY_STRING_PREFIX = 'attribute';
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductConcreteStorageTransfer $productConcreteStorageTransfer
-     *
-     * @return string
-     */
     public function buildProductConcreteUrl(ProductConcreteStorageTransfer $productConcreteStorageTransfer): string
     {
         $productConcreteStorageTransfer->requireUrl();
@@ -32,11 +27,6 @@ class ProductConcreteStorageUrlBuilder implements ProductConcreteStorageUrlBuild
         );
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductConcreteStorageTransfer $productConcreteStorageTransfer
-     *
-     * @return string
-     */
     protected function resolveProductConcreteQueryString(
         ProductConcreteStorageTransfer $productConcreteStorageTransfer
     ): string {

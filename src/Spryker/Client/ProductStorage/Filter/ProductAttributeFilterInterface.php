@@ -11,12 +11,6 @@ use Generated\Shared\Transfer\ProductViewTransfer;
 
 interface ProductAttributeFilterInterface
 {
-    /**
-     * @param array $selectedVariantNode
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return array
-     */
     public function filterAvailableProductAttributes(
         array $selectedVariantNode,
         ProductViewTransfer $productViewTransfer

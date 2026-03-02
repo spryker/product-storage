@@ -24,10 +24,6 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
      */
     protected $productAttributeFilter;
 
-    /**
-     * @param \Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReaderInterface $productConcreteStorageReader
-     * @param \Spryker\Client\ProductStorage\Filter\ProductAttributeFilterInterface $productAttributeFilter
-     */
     public function __construct(
         ProductConcreteStorageReaderInterface $productConcreteStorageReader,
         ProductAttributeFilterInterface $productAttributeFilter
@@ -65,12 +61,6 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
         return $productViewTransfer;
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     * @param string $localeName
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer
-     */
     public function expandProductViewWithProductVariant(
         ProductViewTransfer $productViewTransfer,
         string $localeName
@@ -95,11 +85,6 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
         return $productViewTransfer;
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return bool
-     */
     protected function isOnlyOneProductVariantCanBeSelected(ProductViewTransfer $productViewTransfer): bool
     {
         return count($productViewTransfer->getAttributeMap()->getProductConcreteIds()) === 1 ||
@@ -130,12 +115,6 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
         );
     }
 
-    /**
-     * @param array $selectedVariantNode
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $storageProductTransfer
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer
-     */
     protected function setAvailableAttributes(array $selectedVariantNode, ProductViewTransfer $storageProductTransfer): ProductViewTransfer
     {
         $availableAttributes = $this->productAttributeFilter
@@ -298,11 +277,6 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
         return $selectedVariantNode[ProductConfig::VARIANT_LEAF_NODE_ID];
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer
-     */
     protected function setSingleValueAttributesAsSelected(ProductViewTransfer $productViewTransfer): ProductViewTransfer
     {
         $originalSelectedAttributes = $productViewTransfer->getSelectedAttributes();
@@ -322,12 +296,6 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
         return $productViewTransfer;
     }
 
-    /**
-     * @param array $selectedAttributes
-     * @param array $attributeVariantMap
-     *
-     * @return array
-     */
     protected function getVariantNodeByAttributeVariantMap(array $selectedAttributes, array $attributeVariantMap): array
     {
         foreach ($attributeVariantMap as $idProductConcrete => $productSuperAttributes) {

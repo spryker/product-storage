@@ -52,11 +52,6 @@ interface ProductConcreteStorageReaderInterface
      */
     public function getProductConcreteStorageTransfersForCurrentLocale(array $productIds): array;
 
-    /**
-     * @param int $idProductConcrete
-     *
-     * @return bool
-     */
     public function isProductConcreteRestricted(int $idProductConcrete): bool;
 
     /**

@@ -105,11 +105,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addStoreClient(Container $container): Container
     {
         $container->set(static::CLIENT_STORE, function (Container $container) {
@@ -149,11 +144,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addUtilEncodingService(Container $container): Container
     {
         $container->set(static::SERVICE_UTIL_ENCODING, function (Container $container) {
@@ -165,11 +155,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addUtilSanitizeService(Container $container): Container
     {
         $container->set(static::SERVICE_UTIL_SANITIZE, function (Container $container) {
@@ -209,11 +194,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addProductAbstractRestrictionPlugins(Container $container): Container
     {
         $container->set(static::PLUGINS_PRODUCT_ABSTRACT_RESTRICTION, function () {
@@ -223,11 +203,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addProductConcreteRestrictionPlugins(Container $container): Container
     {
         $container->set(static::PLUGINS_PRODUCT_CONCRETE_RESTRICTION, function () {
@@ -237,11 +212,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addProductConcreteExpanderPlugins(Container $container): Container
     {
         $container->set(static::PLUGINS_PRODUCT_CONCRETE_EXPANDER, function () {
@@ -251,11 +221,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addProductAbstractRestrictionFilterPlugins(Container $container): Container
     {
         $container->set(static::PLUGINS_PRODUCT_ABSTRACT_RESTRICTION_FILTER, function () {
@@ -265,11 +230,6 @@ class ProductStorageDependencyProvider extends AbstractDependencyProvider
         return $container;
     }
 
-    /**
-     * @param \Spryker\Client\Kernel\Container $container
-     *
-     * @return \Spryker\Client\Kernel\Container
-     */
     protected function addProductConcreteRestrictionFilterPlugins(Container $container): Container
     {
         $container->set(static::PLUGINS_PRODUCT_CONCRETE_RESTRICTION_FILTER, function () {

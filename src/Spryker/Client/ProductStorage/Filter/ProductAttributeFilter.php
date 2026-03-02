@@ -26,20 +26,11 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
      */
     protected $utilSanitizeService;
 
-    /**
-     * @param \Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilSanitizeServiceInterface $utilSanitizeService
-     */
     public function __construct(ProductStorageToUtilSanitizeServiceInterface $utilSanitizeService)
     {
         $this->utilSanitizeService = $utilSanitizeService;
     }
 
-    /**
-     * @param array $selectedVariantNode
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return array
-     */
     public function filterAvailableProductAttributes(
         array $selectedVariantNode,
         ProductViewTransfer $productViewTransfer
@@ -51,11 +42,6 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return $this->findAvailableAttributes($selectedVariantNode);
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return array
-     */
     protected function getAvailableAttributes(ProductViewTransfer $productViewTransfer): array
     {
         $availableAttributes = [];
@@ -100,13 +86,6 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return $filteredAttributes;
     }
 
-    /**
-     * @param array $superAttributes
-     * @param array $selectedAttributes
-     * @param array $availableAttributes
-     *
-     * @return array
-     */
     protected function filterAvailableAttributes(
         array $superAttributes,
         array $selectedAttributes,
@@ -125,12 +104,6 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return $availableAttributes;
     }
 
-    /**
-     * @param array $selectedAttributes
-     * @param array $productSuperAttributes
-     *
-     * @return bool
-     */
     protected function isSubsetAttributes(array $selectedAttributes, array $productSuperAttributes): bool
     {
         foreach ($selectedAttributes as $superAttributeKey => $superAttributeValue) {
@@ -142,13 +115,6 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return true;
     }
 
-    /**
-     * @param array $superAttributeHaystack
-     * @param string $superAttributeKey
-     * @param string $superAttributeValue
-     *
-     * @return bool
-     */
     protected function includeSameAttribute(
         array $superAttributeHaystack,
         string $superAttributeKey,
@@ -157,13 +123,6 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return isset($superAttributeHaystack[$superAttributeKey]) && (string)$superAttributeHaystack[$superAttributeKey] === $superAttributeValue;
     }
 
-    /**
-     * @param array $availableAttributes
-     * @param string $attributeKey
-     * @param string $attributeValue
-     *
-     * @return bool
-     */
     protected function hasAttributeWithValue(array $availableAttributes, string $attributeKey, string $attributeValue): bool
     {
         return isset($availableAttributes[$attributeKey]) && in_array($attributeValue, $availableAttributes[$attributeKey], true);

@@ -48,17 +48,11 @@ class ProductStorageFactory extends AbstractFactory
         return $this->getProvidedDependency(ProductStorageDependencyProvider::SERVICE_SYNCHRONIZATION);
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilEncodingServiceInterface
-     */
     public function getUtilEncodingService(): ProductStorageToUtilEncodingServiceInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::SERVICE_UTIL_ENCODING);
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilSanitizeServiceInterface
-     */
     public function getUtilSanitizeService(): ProductStorageToUtilSanitizeServiceInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::SERVICE_UTIL_SANITIZE);
@@ -87,9 +81,6 @@ class ProductStorageFactory extends AbstractFactory
         );
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Finder\ProductViewTransferFinderInterface
-     */
     public function createProductConcreteViewTransferFinder(): ProductViewTransferFinderInterface
     {
         return new ProductConcreteViewTransferFinder(
@@ -113,9 +104,6 @@ class ProductStorageFactory extends AbstractFactory
         );
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Finder\ProductViewTransferFinderInterface
-     */
     public function createProductAbstractViewTransferFinder(): ProductViewTransferFinderInterface
     {
         return new ProductAbstractViewTransferFinder(
@@ -160,9 +148,6 @@ class ProductStorageFactory extends AbstractFactory
         );
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Filter\ProductAttributeFilterInterface
-     */
     public function createProductAttributeFilter(): ProductAttributeFilterInterface
     {
         return new ProductAttributeFilter(
@@ -170,9 +155,6 @@ class ProductStorageFactory extends AbstractFactory
         );
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Filter\ProductAbstractAttributeMapRestrictionFilterInterface
-     */
     public function createProductAbstractAttributeMapRestrictionFilter(): ProductAbstractAttributeMapRestrictionFilterInterface
     {
         return new ProductAbstractAttributeMapRestrictionFilter(
@@ -180,25 +162,16 @@ class ProductStorageFactory extends AbstractFactory
         );
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Mapper\ProductStorageToProductConcreteTransferDataMapperInterface
-     */
     public function createProductStorageToProductConcreteTransferDataMapper(): ProductStorageToProductConcreteTransferDataMapperInterface
     {
         return new ProductStorageToProductConcreteTransferDataMapper($this->getProductConcreteExpanderPlugins());
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Builder\ProductConcreteStorageUrlBuilderInterface
-     */
     public function createProductConcreteStorageUrlBuilder(): ProductConcreteStorageUrlBuilderInterface
     {
         return new ProductConcreteStorageUrlBuilder();
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Generator\ProductAttributesResetUrlGeneratorInterface
-     */
     public function createProductAttributesResetUrlGenerator(): ProductAttributesResetUrlGeneratorInterface
     {
         return new ProductAttributesResetUrlGenerator();
@@ -252,9 +225,6 @@ class ProductStorageFactory extends AbstractFactory
         return $this->getProvidedDependency(ProductStorageDependencyProvider::PLUGINS_PRODUCT_CONCRETE_RESTRICTION_FILTER);
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStoreClientInterface
-     */
     public function getStoreClient(): ProductStorageToStoreClientInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::CLIENT_STORE);

@@ -30,11 +30,6 @@ class ProductStorageToProductConcreteTransferDataMapper implements ProductStorag
         $this->productConcreteExpanderPlugins = $productConcreteExpanderPlugins;
     }
 
-    /**
-     * @param array $productConcreteStorageData
-     *
-     * @return \Generated\Shared\Transfer\ProductConcreteTransfer
-     */
     public function mapProductStorageDataToProductConcreteTransfer(array $productConcreteStorageData): ProductConcreteTransfer
     {
         $productConcreteTransfer = (new ProductConcreteTransfer())->fromArray($productConcreteStorageData, true);

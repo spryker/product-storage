@@ -29,21 +29,11 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
      */
     protected static $productViewTransfersCache = [];
 
-    /**
-     * @param \Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapperInterface $productStorageDataMapper
-     */
     public function __construct(ProductStorageDataMapperInterface $productStorageDataMapper)
     {
         $this->productStorageDataMapper = $productStorageDataMapper;
     }
 
-    /**
-     * @param int $idProduct
-     * @param string $localeName
-     * @param array $selectedAttributes
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer|null
-     */
     public function findProductViewTransfer(int $idProduct, string $localeName, array $selectedAttributes = []): ?ProductViewTransfer
     {
         if ($this->hasProductViewTransferCache($idProduct, $localeName, $selectedAttributes)) {
@@ -118,13 +108,6 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
         return $productViewTransfers;
     }
 
-    /**
-     * @param int $idProduct
-     * @param string $localeName
-     * @param array $selectedAttributes
-     *
-     * @return bool
-     */
     protected function hasProductViewTransferCache(int $idProduct, string $localeName, array $selectedAttributes = []): bool
     {
         $selectedAttributesCacheKey = $this->createSelectedAttributesCacheKey($selectedAttributes);
@@ -132,11 +115,6 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
         return isset(static::$productViewTransfersCache[$idProduct][$localeName][$selectedAttributesCacheKey]);
     }
 
-    /**
-     * @param array $selectedAttributes
-     *
-     * @return string
-     */
     protected function createSelectedAttributesCacheKey(array $selectedAttributes = []): string
     {
         $selectedAttributesCacheKey = '';
@@ -196,13 +174,6 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
         return $selectedAttributes[$this->getProductDataProductId($productData)] ?? [];
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     * @param string $localeName
-     * @param array $selectedAttributes
-     *
-     * @return void
-     */
     protected function cacheProductViewTransfer(ProductViewTransfer $productViewTransfer, string $localeName, array $selectedAttributes = []): void
     {
         $selectedAttributesCacheKey = $this->createSelectedAttributesCacheKey($selectedAttributes);
@@ -225,11 +196,6 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
         return $productViewTransfers;
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     *
-     * @return int
-     */
     abstract protected function getProductId(ProductViewTransfer $productViewTransfer): int;
 
     /**

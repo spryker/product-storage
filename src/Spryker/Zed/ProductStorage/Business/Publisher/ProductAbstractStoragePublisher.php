@@ -20,11 +20,6 @@ class ProductAbstractStoragePublisher implements ProductAbstractStoragePublisher
      */
     protected const COL_FK_PRODUCT = 'spy_product_localized_attributes.fk_product';
 
-    /**
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToEventBehaviorFacadeInterface $eventBehaviorFacade
-     * @param \Spryker\Zed\ProductStorage\Business\Storage\ProductAbstractStorageWriterInterface $productAbstractStorageWriter
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface $productStorageRepository
-     */
     public function __construct(
         protected ProductStorageToEventBehaviorFacadeInterface $eventBehaviorFacade,
         protected ProductAbstractStorageWriterInterface $productAbstractStorageWriter,

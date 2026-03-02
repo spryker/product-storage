@@ -41,19 +41,11 @@ class ProductAbstractAttributeMapRestrictionFilter implements ProductAbstractAtt
      */
     protected $productConcreteStorageReader;
 
-    /**
-     * @param \Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReaderInterface $productConcreteStorageReader
-     */
     public function __construct(ProductConcreteStorageReaderInterface $productConcreteStorageReader)
     {
         $this->productConcreteStorageReader = $productConcreteStorageReader;
     }
 
-    /**
-     * @param array $productStorageData
-     *
-     * @return array
-     */
     public function filterAbstractProductVariantsData(array $productStorageData): array
     {
         if (!isset($productStorageData[ProductStorageConfig::RESOURCE_TYPE_ATTRIBUTE_MAP][static::KEY_PRODUCT_CONCRETE_IDS])) {
@@ -216,12 +208,6 @@ class ProductAbstractAttributeMapRestrictionFilter implements ProductAbstractAtt
         );
     }
 
-    /**
-     * @param string $attributeKey
-     * @param string $attributeValue
-     *
-     * @return string
-     */
     protected function getAttributeKeyValue(string $attributeKey, string $attributeValue): string
     {
         return implode(ProductStorageConfig::ATTRIBUTE_MAP_PATH_DELIMITER, [
@@ -273,11 +259,6 @@ class ProductAbstractAttributeMapRestrictionFilter implements ProductAbstractAtt
         return $attributeVariantMap;
     }
 
-    /**
-     * @param array $attributeVariantMap
-     *
-     * @return array
-     */
     protected function mapSuperAttributesByAttributeVariantMap(array $attributeVariantMap): array
     {
         $filteredSuperAttributes = [];

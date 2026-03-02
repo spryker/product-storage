@@ -21,12 +21,6 @@ interface ProductVariantExpanderInterface
      */
     public function expandProductVariantData(ProductViewTransfer $productViewTransfer, $locale);
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductViewTransfer $productViewTransfer
-     * @param string $localeName
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer
-     */
     public function expandProductViewWithProductVariant(
         ProductViewTransfer $productViewTransfer,
         string $localeName

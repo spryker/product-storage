@@ -55,10 +55,6 @@ class StorageProductAbstractReadinessProvider implements ProductAbstractReadines
      */
     protected $storeFacade;
 
-    /**
-     * @param \Spryker\Client\ProductStorage\ProductStorageClientInterface $productStorageClient
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface $storeFacade
-     */
     public function __construct(
         ProductStorageClientInterface $productStorageClient,
         ProductStorageToStoreFacadeInterface $storeFacade
@@ -138,13 +134,6 @@ class StorageProductAbstractReadinessProvider implements ProductAbstractReadines
         return $availableLocales;
     }
 
-    /**
-     * @param int $idProductAbstract
-     * @param string $localeIsoCode
-     * @param string $storeName
-     *
-     * @return bool
-     */
     protected function hasProductDataInStorage(int $idProductAbstract, string $localeIsoCode, string $storeName): bool
     {
         $productData = $this->productStorageClient->getBulkProductAbstractStorageDataByProductAbstractIdsForLocaleNameAndStore(

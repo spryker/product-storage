@@ -27,11 +27,6 @@ interface ProductAbstractStorageReaderInterface
      */
     public function findProductAbstractStorageData(int $idProductAbstract, string $localeName): ?array;
 
-    /**
-     * @param int $idProductAbstract
-     *
-     * @return bool
-     */
     public function isProductAbstractRestricted(int $idProductAbstract): bool;
 
     /**

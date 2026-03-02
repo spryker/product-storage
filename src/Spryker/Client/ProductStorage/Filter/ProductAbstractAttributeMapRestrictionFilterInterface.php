@@ -9,10 +9,5 @@ namespace Spryker\Client\ProductStorage\Filter;
 
 interface ProductAbstractAttributeMapRestrictionFilterInterface
 {
-    /**
-     * @param array $productStorageData
-     *
-     * @return array
-     */
     public function filterAbstractProductVariantsData(array $productStorageData): array;
 }

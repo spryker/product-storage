@@ -11,13 +11,6 @@ use Generated\Shared\Transfer\ProductViewTransfer;
 
 interface ProductViewTransferFinderInterface
 {
-    /**
-     * @param int $idProduct
-     * @param string $localeName
-     * @param array $selectedAttributes
-     *
-     * @return \Generated\Shared\Transfer\ProductViewTransfer|null
-     */
     public function findProductViewTransfer(int $idProduct, string $localeName, array $selectedAttributes = []): ?ProductViewTransfer;
 
     /**

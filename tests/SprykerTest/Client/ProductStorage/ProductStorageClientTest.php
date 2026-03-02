@@ -120,9 +120,6 @@ class ProductStorageClientTest extends Unit
      */
     protected ProductStorageClientTester $tester;
 
-    /**
-     * @return void
-     */
     public function setUp(): void
     {
         parent::setUp();
@@ -130,9 +127,6 @@ class ProductStorageClientTest extends Unit
         $this->resetProductConcreteStorageReaderCache();
     }
 
-    /**
-     * @return void
-     */
     public function testGetBulkProductAbstractStorageDataByProductAbstractIdsAndLocaleNameReturnsCorrectData(): void
     {
         // Arrange
@@ -162,9 +156,6 @@ class ProductStorageClientTest extends Unit
         $this->assertSame($productAbstractStorageTransfer->toArray(), $productAbstractStorageData[$idProductAbstract]);
     }
 
-    /**
-     * @return void
-     */
     public function testExpandProductVariantDataMergeAbstractAndConcreteArrayFilterDoesNotRemoveFalse(): void
     {
         // Arrange
@@ -180,9 +171,6 @@ class ProductStorageClientTest extends Unit
         $this->assertFalse($productConcreteStorageData[ProductViewTransfer::AVAILABLE]);
     }
 
-    /**
-     * @return void
-     */
     public function testExpandProductViewWithProductVariantMergeAbstractAndConcreteArrayFilterDoesNotRemoveFalse(): void
     {
         // Arrange
@@ -229,9 +217,6 @@ class ProductStorageClientTest extends Unit
         $this->assertSame($expectedSelectedAttributes, $expandedProductViewTransfer->getSelectedAttributes());
     }
 
-    /**
-     * @return void
-     */
     public function testExpandProductViewWithProductVariantReturnsUpdatedTransferWithCorrectData(): void
     {
         // Arrange
@@ -284,9 +269,6 @@ class ProductStorageClientTest extends Unit
         }
     }
 
-    /**
-     * @return void
-     */
     public function testExpandProductViewWithProductVariantFilterSelectedAttributesByAttributeVariantMap(): void
     {
         // Arrange
@@ -332,9 +314,6 @@ class ProductStorageClientTest extends Unit
         );
     }
 
-    /**
-     * @return void
-     */
     public function testExpandProductViewWithProductVariantSetsAvailableAttributesByAttributeVariantMapInCaseAttributeValueAndSelectedAttributeAreNotTheSameType(): void
     {
         // Arrange
@@ -442,9 +421,6 @@ class ProductStorageClientTest extends Unit
         $this->assertProductViewTransfersOrder($secondProductConcreteIds, $secondProductViewTransfers, ProductStorageClientTester::PRODUCT_CONCRETE_RESOURCE_NAME);
     }
 
-    /**
-     * @return void
-     */
     public function testGenerateProductAttributesResetUrlQueryParametersShouldGenerateParametersAccordingToProvidedRequestQueryData(): void
     {
         // Arrange
@@ -536,9 +512,6 @@ class ProductStorageClientTest extends Unit
         );
     }
 
-    /**
-     * @return void
-     */
     protected function resetProductConcreteStorageReaderCache(): void
     {
         $reflection = new ReflectionProperty(ProductConcreteStorageReader::class, 'productsConcreteDataCache');
@@ -594,11 +567,6 @@ class ProductStorageClientTest extends Unit
         return $productConcreteStorageReaderMock;
     }
 
-    /**
-     * @param array $seedData
-     *
-     * @return \Generated\Shared\Transfer\ProductAbstractStorageTransfer
-     */
     protected function getProductAbstractStorage(array $seedData = []): ProductAbstractStorageTransfer
     {
         return (new ProductAbstractStorageBuilder($seedData))->build();

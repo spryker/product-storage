@@ -46,11 +46,6 @@ class ProductStorageToEventBehaviorFacadeBridge implements ProductStorageToEvent
         return $this->eventBehaviorFacade->getEventTransferForeignKeys($eventTransfers, $foreignKeyColumnName);
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\HydrateEventsRequestTransfer $hydrateEventsRequestTransfer
-     *
-     * @return \Generated\Shared\Transfer\HydrateEventsResponseTransfer
-     */
     public function hydrateEventDataTransfer(HydrateEventsRequestTransfer $hydrateEventsRequestTransfer): HydrateEventsResponseTransfer
     {
         return $this->eventBehaviorFacade->hydrateEventDataTransfer($hydrateEventsRequestTransfer);

@@ -64,17 +64,11 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\Filter\SingleValueSuperAttributeFilterInterface
-     */
     public function createSingleValueSuperAttributeFilter(): SingleValueSuperAttributeFilterInterface
     {
         return new SingleValueSuperAttributeFilter();
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\Publisher\ProductAbstractStoragePublisherInterface
-     */
     public function createProductAbstractStoragePublisher(): ProductAbstractStoragePublisherInterface
     {
         return new ProductAbstractStoragePublisher(
@@ -105,17 +99,11 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         return $this->getProvidedDependency(ProductStorageDependencyProvider::FACADE_PRODUCT);
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface
-     */
     public function getStoreFacade(): ProductStorageToStoreFacadeInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::FACADE_STORE);
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToEventBehaviorFacadeInterface
-     */
     public function getEventBehaviorFacade(): ProductStorageToEventBehaviorFacadeInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::FACADE_EVENT_BEHAVIOR);
@@ -153,9 +141,6 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         return $this->getProvidedDependency(ProductStorageDependencyProvider::PLUGINS_PRODUCT_CONCRETE_STORAGE_COLLECTION_FILTER);
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductAbstractReadinessProviderInterface
-     */
     public function createStorageTableProductAbstractReadinessProvider(): ProductAbstractReadinessProviderInterface
     {
         return new StorageTableProductAbstractReadinessProvider(
@@ -164,9 +149,6 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductAbstractReadinessProviderInterface
-     */
     public function createStorageProductAbstractReadinessProvider(): ProductAbstractReadinessProviderInterface
     {
         return new StorageProductAbstractReadinessProvider(
@@ -175,9 +157,6 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductConcreteReadinessProviderInterface
-     */
     public function createStorageTableProductConcreteReadinessProvider(): ProductConcreteReadinessProviderInterface
     {
         return new StorageTableProductConcreteReadinessProvider(
@@ -186,9 +165,6 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\Provider\ProductConcreteReadinessProviderInterface
-     */
     public function createStorageProductConcreteReadinessProvider(): ProductConcreteReadinessProviderInterface
     {
         return new StorageProductConcreteReadinessProvider(
@@ -197,9 +173,6 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    /**
-     * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface
-     */
     protected function getProductStorageClient(): ProductStorageClientInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::CLIENT_PRODUCT_STORAGE);

@@ -40,10 +40,6 @@ class StorageProductConcreteReadinessProvider implements ProductConcreteReadines
      */
     protected ProductStorageToStoreFacadeInterface $storeFacade;
 
-    /**
-     * @param \Spryker\Client\ProductStorage\ProductStorageClientInterface $productStorageClient
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface $storeFacade
-     */
     public function __construct(
         ProductStorageClientInterface $productStorageClient,
         ProductStorageToStoreFacadeInterface $storeFacade
@@ -114,12 +110,6 @@ class StorageProductConcreteReadinessProvider implements ProductConcreteReadines
         return array_unique($allLocales);
     }
 
-    /**
-     * @param int $idProductConcrete
-     * @param string $localeIsoCode
-     *
-     * @return bool
-     */
     protected function hasProductDataInStorage(int $idProductConcrete, string $localeIsoCode): bool
     {
         $productData = $this->productStorageClient->getBulkProductConcreteStorageData(

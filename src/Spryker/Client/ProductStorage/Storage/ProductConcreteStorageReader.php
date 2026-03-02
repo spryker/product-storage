@@ -296,22 +296,12 @@ class ProductConcreteStorageReader implements ProductConcreteStorageReaderInterf
         return $productConcreteStorageTransfers;
     }
 
-    /**
-     * @param array $productConcreteStorageData
-     *
-     * @return \Generated\Shared\Transfer\ProductConcreteStorageTransfer
-     */
     protected function mapProductConcreteStorageDataToTransfer(array $productConcreteStorageData): ProductConcreteStorageTransfer
     {
         return (new ProductConcreteStorageTransfer())
             ->fromArray($productConcreteStorageData, true);
     }
 
-    /**
-     * @param int $idProductConcrete
-     *
-     * @return bool
-     */
     public function isProductConcreteRestricted(int $idProductConcrete): bool
     {
         foreach ($this->productConcreteRestrictionPlugins as $productConcreteRestrictionPlugin) {
@@ -384,12 +374,6 @@ class ProductConcreteStorageReader implements ProductConcreteStorageReaderInterf
         );
     }
 
-    /**
-     * @param string $reference
-     * @param string $localeName
-     *
-     * @return string
-     */
     protected function getStorageKey(string $reference, string $localeName): string
     {
         $synchronizationDataTransfer = new SynchronizationDataTransfer();
@@ -400,9 +384,6 @@ class ProductConcreteStorageReader implements ProductConcreteStorageReaderInterf
         return $this->getStorageKeyBuilder()->generateKey($synchronizationDataTransfer);
     }
 
-    /**
-     * @return \Spryker\Service\Synchronization\Dependency\Plugin\SynchronizationKeyGeneratorPluginInterface
-     */
     protected function getStorageKeyBuilder(): SynchronizationKeyGeneratorPluginInterface
     {
         if (static::$storageKeyBuilder === null) {
@@ -429,12 +410,6 @@ class ProductConcreteStorageReader implements ProductConcreteStorageReaderInterf
         return static::$productsConcreteDataCache[$idProductConcrete][$localeName];
     }
 
-    /**
-     * @param int $idProductConcrete
-     * @param string $localeName
-     *
-     * @return bool
-     */
     protected function hasProductConcreteDataCacheByIdProductConcreteAndLocaleName(int $idProductConcrete, string $localeName): bool
     {
         return isset(static::$productsConcreteDataCache[$idProductConcrete][$localeName]);
@@ -542,12 +517,6 @@ class ProductConcreteStorageReader implements ProductConcreteStorageReaderInterf
         return $mappingKeys;
     }
 
-    /**
-     * @param array $productStorageDataCollection
-     * @param string $localeName
-     *
-     * @return array
-     */
     protected function mapBulkProductConcreteStorageData(array $productStorageDataCollection, string $localeName): array
     {
         $productConcreteStorageData = [];

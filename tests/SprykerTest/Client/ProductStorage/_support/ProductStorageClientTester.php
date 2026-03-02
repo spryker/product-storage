@@ -59,9 +59,6 @@ class ProductStorageClientTester extends Actor
      */
     protected const STORE_NAME_DE = 'de';
 
-    /**
-     * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface
-     */
     public function getProductStorageClient(): ProductStorageClientInterface
     {
         return $this->getLocator()

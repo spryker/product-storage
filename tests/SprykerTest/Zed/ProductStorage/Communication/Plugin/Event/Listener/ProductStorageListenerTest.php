@@ -85,9 +85,6 @@ class ProductStorageListenerTest extends Unit
      */
     protected $productAbstractTransfer;
 
-    /**
-     * @return void
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -112,9 +109,6 @@ class ProductStorageListenerTest extends Unit
         $this->tester->cleanUpProcessedConcreteProductIds();
     }
 
-    /**
-     * @return void
-     */
     public function testProductAbstractStorageListenerStoreDataToProcessUniqueProducts(): void
     {
         // Assert
@@ -151,9 +145,6 @@ class ProductStorageListenerTest extends Unit
         $productAbstractStoreStorageListener->handleBulk($eventTransfers, ProductEvents::PRODUCT_ABSTRACT_UNPUBLISH);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteStorageListenerStoreDataToProcessUniqueProducts(): void
     {
         // Assert
@@ -236,9 +227,6 @@ class ProductStorageListenerTest extends Unit
         $this->tester->cleanUpProcessedAbstractProductIds();
     }
 
-    /**
-     * @return void
-     */
     public function testProductAbstractStorageListenerStoreData(): void
     {
         // Arrange
@@ -259,9 +247,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductAbstractStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductAbstractStoragePublishListener(): void
     {
         // Arrange
@@ -282,9 +267,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductAbstractStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductAbstractStorageUnpublishListener(): void
     {
         // Arrange
@@ -302,9 +284,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertSame(0, SpyProductAbstractStorageQuery::create()->filterByFkProductAbstract($this->productAbstractTransfer->getIdProductAbstract())->count());
     }
 
-    /**
-     * @return void
-     */
     public function testProductAbstractUrlStorageListenerStoreData(): void
     {
         // Arrange
@@ -328,9 +307,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductAbstractStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductAbstractLocalizedAttributesStorageListenerStoreData(): void
     {
         // Arrange
@@ -353,9 +329,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductAbstractStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteProductAbstractRelationStorageListenerStoreData(): void
     {
         // Arrange
@@ -378,9 +351,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductAbstractStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteStorageListenerStoreData(): void
     {
         // Arrange
@@ -401,9 +371,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductConcreteStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteStoragePublishListener(): void
     {
         // Arrange
@@ -424,9 +391,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductConcreteStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteStorageUnpublishListener(): void
     {
         // Arrange
@@ -444,9 +408,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertSame(0, SpyProductConcreteStorageQuery::create()->filterByFkProduct($this->productConcreteTransfer->getIdProductConcrete())->count());
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteRelationUrlStorageListenerStoreData(): void
     {
         // Arrange
@@ -470,9 +431,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductConcreteStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteProductAbstractStorageListenerStoreData(): void
     {
         // Arrange
@@ -493,9 +451,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductConcreteStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteProductAbstractLocalizedAttributesStorageListenerStoreData(): void
     {
         // Arrange
@@ -518,9 +473,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductConcreteStorage($beforeCount);
     }
 
-    /**
-     * @return void
-     */
     public function testProductConcreteLocalizedAttributesStorageListenerStoreData(): void
     {
         // Arrange
@@ -543,9 +495,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertProductConcreteStorage($beforeCount);
     }
 
-    /**
-     * @return \Spryker\Zed\ProductStorage\Business\ProductStorageFacade
-     */
     protected function getProductStorageFacade(): ProductStorageFacade
     {
         $factory = new ProductStorageBusinessFactory();
@@ -557,11 +506,6 @@ class ProductStorageListenerTest extends Unit
         return $facade;
     }
 
-    /**
-     * @param int $beforeCount
-     *
-     * @return void
-     */
     protected function assertProductAbstractStorage(int $beforeCount): void
     {
         $afterCount = SpyProductAbstractStorageQuery::create()->count();
@@ -583,11 +527,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertContains($data['url'], $urlCollectionEntity->getColumnValues('url'));
     }
 
-    /**
-     * @param int $beforeCount
-     *
-     * @return void
-     */
     protected function assertProductConcreteStorage(int $beforeCount): void
     {
         $afterCount = SpyProductConcreteStorageQuery::create()->count();
@@ -611,9 +550,6 @@ class ProductStorageListenerTest extends Unit
         $this->assertContains($data['url'], $urlCollectionEntity->getColumnValues('url'));
     }
 
-    /**
-     * @return array
-     */
     protected function getIdStores(): array
     {
         $storeIds = [];
@@ -625,11 +561,6 @@ class ProductStorageListenerTest extends Unit
         return $storeIds;
     }
 
-    /**
-     * @param \Generated\Shared\Transfer\ProductAbstractTransfer $productAbstractTransfer
-     *
-     * @return void
-     */
     protected function addStoreRelationToProductAbstracts(ProductAbstractTransfer $productAbstractTransfer): void
     {
         $idStores = $this->getIdStores();
@@ -639,17 +570,11 @@ class ProductStorageListenerTest extends Unit
         $this->tester->getProductFacade()->saveProductAbstract($productAbstractTransfer);
     }
 
-    /**
-     * @return \Spryker\Zed\Store\Business\StoreFacadeInterface
-     */
     protected function getStoreFacade(): StoreFacadeInterface
     {
         return $this->tester->getLocator()->store()->facade();
     }
 
-    /**
-     * @return array
-     */
     public function getProductListenerDataProvider(): array
     {
         return [

@@ -318,11 +318,6 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         return $filteredData;
     }
 
-    /**
-     * @param int $idProductAbstract
-     *
-     * @return bool
-     */
     public function isProductAbstractRestricted(int $idProductAbstract): bool
     {
         foreach ($this->productAbstractRestrictionPlugins as $productAbstractRestrictionPlugin) {
@@ -370,13 +365,6 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         return $this->getBulkProductAbstractStorageDataByProductAbstractIdsAndLocaleName($productAbstractIds, $localeName);
     }
 
-    /**
-     * @param string $reference
-     * @param string $locale
-     * @param string $storeName
-     *
-     * @return string
-     */
     protected function getStorageKey(string $reference, string $locale, string $storeName): string
     {
         $synchronizationDataTransfer = new SynchronizationDataTransfer();
@@ -390,9 +378,6 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
             ->generateKey($synchronizationDataTransfer);
     }
 
-    /**
-     * @return \Spryker\Service\Synchronization\Dependency\Plugin\SynchronizationKeyGeneratorPluginInterface
-     */
     protected function getStorageKeyBuilder(): SynchronizationKeyGeneratorPluginInterface
     {
         if (static::$storageKeyBuilder === null) {
@@ -423,13 +408,6 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         return static::$productsAbstractDataCache[$idProductAbstract][$localeName][$storeName];
     }
 
-    /**
-     * @param int $idProductAbstract
-     * @param string $localeName
-     * @param string $storeName
-     *
-     * @return bool
-     */
     protected function hasProductAbstractDataCacheByIdProductAbstractForLocaleNameAndStore(
         int $idProductAbstract,
         string $localeName,
@@ -583,13 +561,6 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         return $storageKeys;
     }
 
-    /**
-     * @param array $productStorageDataCollection
-     * @param string $localeName
-     * @param string|null $storeName
-     *
-     * @return array
-     */
     protected function mapBulkProductStorageData(array $productStorageDataCollection, string $localeName, ?string $storeName = null): array
     {
         $productAbstractStorageData = [];
@@ -672,9 +643,6 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         return $productAbstractIds;
     }
 
-    /**
-     * @return string
-     */
     protected function getStoreName(): string
     {
         if (static::$storeName === null) {

@@ -31,9 +31,6 @@ use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
  */
 class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
 {
-    /**
-     * @return void
-     */
     public function testProvideFormatsStoresAndLocales(): void
     {
         // Arrange
@@ -56,9 +53,6 @@ class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
         $this->assertSame('DE: de_DE, en_US | US: fr_FR', $productReadiness->getValues()[0]);
     }
 
-    /**
-     * @return void
-     */
     public function testProvideReturnsDashWhenNoStoresProvided(): void
     {
         // Arrange
@@ -77,9 +71,6 @@ class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
         $this->assertSame('-', $result[0]->getValues()[0]);
     }
 
-    /**
-     * @return void
-     */
     public function testProvideHandlesPartialStoreCoverage(): void
     {
         // Arrange
@@ -98,12 +89,6 @@ class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
         $this->assertSame('DE: de_DE | US: -', $result[0]->getValues()[0]);
     }
 
-    /**
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface $repositoryMock
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface $storeFacadeMock
-     *
-     * @return \Spryker\Zed\ProductStorage\Communication\Plugin\ProductManagement\StorageTableProductAbstractReadinessProviderPlugin
-     */
     protected function createPluginWithMocks(
         ProductStorageRepositoryInterface $repositoryMock,
         ProductStorageToStoreFacadeInterface $storeFacadeMock

@@ -31,9 +31,6 @@ use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInte
  */
 class StorageProductAbstractReadinessProviderPluginTest extends Unit
 {
-    /**
-     * @return void
-     */
     public function testProvideFormatsStoresAndLocales(): void
     {
         // Arrange
@@ -62,9 +59,6 @@ class StorageProductAbstractReadinessProviderPluginTest extends Unit
         $this->assertSame('DE: de_DE | US: -', $productReadiness->getValues()[0]);
     }
 
-    /**
-     * @return void
-     */
     public function testProvideReturnsNoWhenNoStoresProvided(): void
     {
         // Arrange
@@ -84,12 +78,6 @@ class StorageProductAbstractReadinessProviderPluginTest extends Unit
         $this->assertSame('-', $result[0]->getValues()[0]);
     }
 
-    /**
-     * @param \Spryker\Client\ProductStorage\ProductStorageClientInterface $clientMock
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface $storeFacadeMock
-     *
-     * @return \Spryker\Zed\ProductStorage\Communication\Plugin\ProductManagement\StorageProductAbstractReadinessProviderPlugin
-     */
     protected function createPluginWithMocks(
         ProductStorageClientInterface $clientMock,
         ProductStorageToStoreFacadeInterface $storeFacadeMock

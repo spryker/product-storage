@@ -45,10 +45,6 @@ class StorageTableProductConcreteReadinessProvider implements ProductConcreteRea
      */
     protected $storeFacade;
 
-    /**
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface $productStorageRepository
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface $storeFacade
-     */
     public function __construct(
         ProductStorageRepositoryInterface $productStorageRepository,
         ProductStorageToStoreFacadeInterface $storeFacade
