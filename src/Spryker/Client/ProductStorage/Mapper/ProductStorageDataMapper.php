@@ -37,6 +37,11 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
     protected $localeClient;
 
     /**
+     * @var array<string, \Generated\Shared\Transfer\ProductViewTransfer>
+     */
+    protected static array $mappingCache = [];
+
+    /**
      * @uses \Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapper::filterProductStorageExpanderPlugins()
      *
      * @param array<\Spryker\Client\ProductStorageExtension\Dependency\Plugin\ProductViewExpanderPluginInterface> $storageProductExpanderPlugins
@@ -67,6 +72,12 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
         array $selectedAttributes = [],
         ?ProductStorageCriteriaTransfer $productStorageCriteriaTransfer = null
     ) {
+        $cacheKey = $this->generateCacheKey($locale, $productStorageData, $selectedAttributes, $productStorageCriteriaTransfer);
+
+        if (isset(static::$mappingCache[$cacheKey])) {
+            return static::$mappingCache[$cacheKey];
+        }
+
         $productStorageData = $this->filterAbstractProductVariantsData($productStorageData);
         $productViewTransfer = $this->createProductViewTransfer($productStorageData);
         $productViewTransfer->setSelectedAttributes($selectedAttributes);
@@ -81,7 +92,27 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
             $productViewTransfer = $productViewExpanderPlugin->expandProductViewTransfer($productViewTransfer, $productStorageData, $locale);
         }
 
+        static::$mappingCache[$cacheKey] = $productViewTransfer;
+
         return $productViewTransfer;
+    }
+
+    protected function generateCacheKey(
+        string $locale,
+        array $productStorageData,
+        array $selectedAttributes,
+        ?ProductStorageCriteriaTransfer $productStorageCriteriaTransfer
+    ): string {
+        $criteriaKey = $productStorageCriteriaTransfer !== null
+            ? serialize($productStorageCriteriaTransfer->toArray())
+            : 'null';
+
+        return md5(
+            $locale
+            . serialize($productStorageData)
+            . serialize($selectedAttributes)
+            . $criteriaKey,
+        );
     }
 
     protected function filterAbstractProductVariantsData(array $productStorageData): array
