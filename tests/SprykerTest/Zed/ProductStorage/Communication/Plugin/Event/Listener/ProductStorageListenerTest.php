@@ -148,32 +148,37 @@ class ProductStorageListenerTest extends Unit
     public function testProductConcreteStorageListenerStoreDataToProcessUniqueProducts(): void
     {
         // Assert
+        $idProductConcrete = 1111;
         $productStorageFacadeMock = $this->tester->mockProductStorageFacade();
-        $productStorageFacadeMock->expects($this->once())
+        $productStorageFacadeMock
+            ->expects($this->once())
             ->method('publishConcreteProducts')
-            ->with([$this->productConcreteTransfer->getIdProductConcrete(), 1234]);
-        $productStorageFacadeMock->expects($this->once())
+            ->with([$idProductConcrete, 1234]);
+        $productStorageFacadeMock
+            ->expects($this->once())
             ->method('unpublishConcreteProducts')
-            ->with([$this->productConcreteTransfer->getIdProductConcrete(), 1234]);
+            ->with([$idProductConcrete, 1234]);
 
         // Arrange
         $productConcreteStoragePublishListener = new ProductConcreteStoragePublishListener();
         $productConcreteStoragePublishListener->setFacade($productStorageFacadeMock);
         $productConcreteProductAbstractStorageListener = new ProductConcreteProductAbstractStorageListener();
         $productConcreteProductAbstractStorageListener->setFacade($productStorageFacadeMock);
-        $productConcreteStoragePublishListener = new ProductConcreteStoragePublishListener();
-        $productConcreteStoragePublishListener->setFacade($productStorageFacadeMock);
+        $productConcreteStoragePublishListener1 = new ProductConcreteStoragePublishListener();
+        $productConcreteStoragePublishListener1->setFacade($productStorageFacadeMock);
 
         $eventTransfers = [
-            (new EventEntityTransfer())->setId($this->productConcreteTransfer->getIdProductConcrete()),
-            (new EventEntityTransfer())->setId($this->productConcreteTransfer->getIdProductConcrete()),
+            (new EventEntityTransfer())->setId($idProductConcrete),
+            (new EventEntityTransfer())->setId(1234),
+            (new EventEntityTransfer())->setId($idProductConcrete),
+            (new EventEntityTransfer())->setId($idProductConcrete),
             (new EventEntityTransfer())->setId(1234),
         ];
 
         // Act
         $productConcreteStoragePublishListener->handleBulk($eventTransfers, ProductEvents::PRODUCT_CONCRETE_PUBLISH);
         $productConcreteProductAbstractStorageListener->handleBulk($eventTransfers, ProductEvents::PRODUCT_CONCRETE_PUBLISH);
-        $productConcreteStoragePublishListener->handleBulk($eventTransfers, ProductEvents::PRODUCT_CONCRETE_UNPUBLISH);
+        $productConcreteStoragePublishListener1->handleBulk($eventTransfers, ProductEvents::PRODUCT_CONCRETE_UNPUBLISH);
     }
 
     /**

@@ -63,11 +63,11 @@ class ProductStorageCommunicationTester extends Actor
         $refClass = new ReflectionClass(AbstractProductStorageListener::class);
         $property = $refClass->getProperty('publishedProductAbstractIds');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = $refClass->getProperty('unpublishedProductAbstractIds');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
     }
 
     /**
@@ -78,11 +78,11 @@ class ProductStorageCommunicationTester extends Actor
         $refClass = new ReflectionClass(AbstractProductConcreteStorageListener::class);
         $property = $refClass->getProperty('publishedProductConcreteIds');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = $refClass->getProperty('unpublishedProductConcreteIds');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
     }
 
     /**

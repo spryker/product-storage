@@ -109,11 +109,6 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
     protected $productAbstractStorageCollectionFilterPlugins = [];
 
     /**
-     * @var array<int, bool>
-     */
-    protected static array $activeConcretesInAbstractMap = [];
-
-    /**
      * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface $productFacade
      * @param \Spryker\Zed\ProductStorage\Business\Attribute\AttributeMapInterface $attributeMap
      * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageQueryContainerInterface $queryContainer
