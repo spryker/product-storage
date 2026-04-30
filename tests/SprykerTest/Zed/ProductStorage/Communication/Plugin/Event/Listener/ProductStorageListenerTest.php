@@ -16,6 +16,7 @@ use Orm\Zed\Product\Persistence\Map\SpyProductAbstractLocalizedAttributesTableMa
 use Orm\Zed\Product\Persistence\Map\SpyProductAbstractStoreTableMap;
 use Orm\Zed\Product\Persistence\Map\SpyProductLocalizedAttributesTableMap;
 use Orm\Zed\Product\Persistence\Map\SpyProductTableMap;
+use Orm\Zed\Product\Persistence\SpyProductAbstractLocalizedAttributesQuery;
 use Orm\Zed\Product\Persistence\SpyProductLocalizedAttributesQuery;
 use Orm\Zed\Product\Persistence\SpyProductQuery;
 use Orm\Zed\ProductStorage\Persistence\SpyProductAbstractStorageQuery;
@@ -396,6 +397,50 @@ class ProductStorageListenerTest extends Unit
 
         // Assert
         $this->assertProductConcreteStorage($beforeCount);
+    }
+
+    public function testProductAbstractStoragePublishListenerDeletesStorageWhenNoLocalizedEntitiesExist(): void
+    {
+        // Arrange
+        $productConcreteTransfer = $this->tester->haveFullProduct();
+        $idProductAbstract = $productConcreteTransfer->getFkProductAbstract();
+
+        $productAbstractStoragePublishListener = new ProductAbstractStoragePublishListener();
+        $productAbstractStoragePublishListener->setFacade($this->getProductStorageFacade());
+
+        $productAbstractStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($idProductAbstract)],
+            ProductEvents::PRODUCT_ABSTRACT_PUBLISH,
+        );
+
+        $this->tester->cleanUpProcessedAbstractProductIds();
+
+        $this->assertGreaterThan(
+            0,
+            SpyProductAbstractStorageQuery::create()
+                ->filterByFkProductAbstract($idProductAbstract)
+                ->count(),
+            'Pre-condition: storage record must exist before publish with no localized entities.',
+        );
+
+        SpyProductAbstractLocalizedAttributesQuery::create()
+            ->filterByFkProductAbstract($idProductAbstract)
+            ->delete();
+
+        // Act
+        $productAbstractStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($idProductAbstract)],
+            ProductEvents::PRODUCT_ABSTRACT_PUBLISH,
+        );
+
+        // Assert
+        $this->assertSame(
+            0,
+            SpyProductAbstractStorageQuery::create()
+                ->filterByFkProductAbstract($idProductAbstract)
+                ->count(),
+            'Storage record must be deleted when publish is called with no localized entities.',
+        );
     }
 
     public function testProductConcreteStoragePublishListenerDeletesStorageWhenNoLocalizedEntitiesExist(): void

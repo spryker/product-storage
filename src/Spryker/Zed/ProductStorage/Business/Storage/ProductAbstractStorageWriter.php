@@ -150,6 +150,7 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
 
         if (!$productAbstractLocalizedEntities) {
             $this->deleteProductAbstractStorageEntities($productAbstractStorageEntities);
+            $this->commit();
 
             return;
         }
