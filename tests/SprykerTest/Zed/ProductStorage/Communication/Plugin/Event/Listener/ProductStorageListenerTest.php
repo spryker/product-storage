@@ -16,6 +16,8 @@ use Orm\Zed\Product\Persistence\Map\SpyProductAbstractLocalizedAttributesTableMa
 use Orm\Zed\Product\Persistence\Map\SpyProductAbstractStoreTableMap;
 use Orm\Zed\Product\Persistence\Map\SpyProductLocalizedAttributesTableMap;
 use Orm\Zed\Product\Persistence\Map\SpyProductTableMap;
+use Orm\Zed\Product\Persistence\SpyProductLocalizedAttributesQuery;
+use Orm\Zed\Product\Persistence\SpyProductQuery;
 use Orm\Zed\ProductStorage\Persistence\SpyProductAbstractStorageQuery;
 use Orm\Zed\ProductStorage\Persistence\SpyProductConcreteStorageQuery;
 use Orm\Zed\Url\Persistence\Map\SpyUrlTableMap;
@@ -394,6 +396,137 @@ class ProductStorageListenerTest extends Unit
 
         // Assert
         $this->assertProductConcreteStorage($beforeCount);
+    }
+
+    public function testProductConcreteStoragePublishListenerDeletesStorageWhenNoLocalizedEntitiesExist(): void
+    {
+        // Arrange
+        $productConcreteTransfer = $this->tester->haveFullProduct();
+
+        $productConcreteStoragePublishListener = new ProductConcreteStoragePublishListener();
+        $productConcreteStoragePublishListener->setFacade($this->getProductStorageFacade());
+
+        $productConcreteStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($productConcreteTransfer->getIdProductConcrete())],
+            ProductEvents::PRODUCT_CONCRETE_PUBLISH,
+        );
+
+        $this->tester->cleanUpProcessedConcreteProductIds();
+
+        $this->assertGreaterThan(
+            0,
+            SpyProductConcreteStorageQuery::create()
+                ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+                ->count(),
+            'Pre-condition: storage record must exist before the publish with no localized entities.',
+        );
+
+        SpyProductLocalizedAttributesQuery::create()
+            ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+            ->delete();
+
+        // Act
+        $productConcreteStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($productConcreteTransfer->getIdProductConcrete())],
+            ProductEvents::PRODUCT_CONCRETE_PUBLISH,
+        );
+
+        // Assert
+        $this->assertSame(
+            0,
+            SpyProductConcreteStorageQuery::create()
+                ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+                ->count(),
+            'Storage record must be deleted when publish is called with no localized entities.',
+        );
+    }
+
+    public function testProductConcreteStoragePublishListenerDeletesStorageWhenNoUrlEntitiesExist(): void
+    {
+        // Arrange
+        $productConcreteTransfer = $this->tester->haveFullProduct();
+
+        $productConcreteStoragePublishListener = new ProductConcreteStoragePublishListener();
+        $productConcreteStoragePublishListener->setFacade($this->getProductStorageFacade());
+
+        $productConcreteStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($productConcreteTransfer->getIdProductConcrete())],
+            ProductEvents::PRODUCT_CONCRETE_PUBLISH,
+        );
+
+        $this->tester->cleanUpProcessedConcreteProductIds();
+
+        $this->assertGreaterThan(
+            0,
+            SpyProductConcreteStorageQuery::create()
+                ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+                ->count(),
+            'Pre-condition: storage record must exist before the publish with no url entities.',
+        );
+
+        SpyUrlQuery::create()
+            ->filterByFkResourceProductAbstract($productConcreteTransfer->getFkProductAbstract())
+            ->delete();
+
+        // Act
+        $productConcreteStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($productConcreteTransfer->getIdProductConcrete())],
+            ProductEvents::PRODUCT_CONCRETE_PUBLISH,
+        );
+
+        // Assert
+        $this->assertSame(
+            0,
+            SpyProductConcreteStorageQuery::create()
+                ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+                ->count(),
+            'Storage record must be deleted when publish is called with no url entities.',
+        );
+    }
+
+    public function testProductConcreteStoragePublishListenerDeletesStorageWhenProductIsDeactivated(): void
+    {
+        // Arrange
+        $productConcreteTransfer = $this->tester->haveFullProduct();
+
+        $productConcreteStoragePublishListener = new ProductConcreteStoragePublishListener();
+        $productConcreteStoragePublishListener->setFacade($this->getProductStorageFacade());
+
+        $productConcreteStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($productConcreteTransfer->getIdProductConcrete())],
+            ProductEvents::PRODUCT_CONCRETE_PUBLISH,
+        );
+
+        $this->tester->cleanUpProcessedConcreteProductIds();
+
+        $this->assertGreaterThan(
+            0,
+            SpyProductConcreteStorageQuery::create()
+                ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+                ->count(),
+            'Pre-condition: storage record must exist before the publish with deactivated product.',
+        );
+
+        SpyProductQuery::create()
+            ->filterByIdProduct($productConcreteTransfer->getIdProductConcrete())
+            ->findOneOrCreate()
+            ->setIsActive(false)
+            ->save();
+
+        // Act
+        $productConcreteStoragePublishListener->handleBulk(
+            [(new EventEntityTransfer())->setId($productConcreteTransfer->getIdProductConcrete())],
+            ProductEvents::PRODUCT_CONCRETE_PUBLISH,
+        );
+
+        // Assert
+        $this->assertSame(
+            0,
+            SpyProductConcreteStorageQuery::create()
+                ->filterByFkProduct($productConcreteTransfer->getIdProductConcrete())
+                ->count(),
+            'Storage record must be deleted when publish is called with deactivated product.',
+        );
     }
 
     public function testProductConcreteStorageUnpublishListener(): void

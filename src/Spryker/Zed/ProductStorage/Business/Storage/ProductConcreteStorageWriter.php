@@ -128,6 +128,7 @@ class ProductConcreteStorageWriter implements ProductConcreteStorageWriterInterf
 
         if (!$productConcreteLocalizedEntities) {
             $this->deleteProductConcreteStorageEntities($productConcreteStorageEntities);
+            $this->commit();
 
             return;
         }
