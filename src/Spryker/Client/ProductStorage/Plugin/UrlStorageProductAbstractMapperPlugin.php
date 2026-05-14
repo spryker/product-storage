@@ -14,6 +14,7 @@ use Spryker\Client\Kernel\AbstractPlugin;
 use Spryker\Client\ProductStorage\ProductStorageConfig;
 use Spryker\Client\UrlStorage\Dependency\Plugin\UrlStorageResourceMapperPluginInterface;
 use Spryker\Service\Synchronization\Dependency\Plugin\SynchronizationKeyGeneratorPluginInterface;
+use Spryker\Shared\ProductStorage\ProductStorageConfig as SharedProductStorageConfig;
 use Spryker\Shared\ProductStorage\ProductStorageConstants;
 
 /**
@@ -41,11 +42,30 @@ class UrlStorageProductAbstractMapperPlugin extends AbstractPlugin implements Ur
     {
         $urlStorageResourceMapTransfer = new UrlStorageResourceMapTransfer();
         $idProductAbstract = $urlStorageTransfer->getFkResourceProductAbstract();
-        if ($idProductAbstract) {
-            $resourceKey = $this->generateKey($idProductAbstract, $options['locale']);
-            $urlStorageResourceMapTransfer->setResourceKey($resourceKey);
-            $urlStorageResourceMapTransfer->setType(ProductStorageConstants::PRODUCT_ABSTRACT_RESOURCE_NAME);
+
+        if (!$idProductAbstract) {
+            return $urlStorageResourceMapTransfer;
         }
+
+        $resourceKey = $this->generateKey($idProductAbstract, $options['locale']);
+
+        /** @var \Spryker\Client\ProductStorage\ProductStorageConfig $config */
+        $config = $this->getFactory()->getConfig();
+
+        if ($config->isProductAbstractStorageUnifiedEnabled()) {
+            $storageData = $this->getFactory()->getStorageClient()->get($resourceKey);
+
+            if ($storageData !== null && !$this->isCurrentStoreInStorageData($storageData)) {
+                return $urlStorageResourceMapTransfer;
+            }
+
+            if ($storageData === null && $config->isProductAbstractStorageUnifiedFallbackEnabled()) {
+                $resourceKey = $this->generateFallbackKey($idProductAbstract, $options['locale']);
+            }
+        }
+
+        $urlStorageResourceMapTransfer->setResourceKey($resourceKey);
+        $urlStorageResourceMapTransfer->setType(ProductStorageConstants::PRODUCT_ABSTRACT_RESOURCE_NAME);
 
         return $urlStorageResourceMapTransfer;
     }
@@ -76,14 +96,58 @@ class UrlStorageProductAbstractMapperPlugin extends AbstractPlugin implements Ur
         return $this->getStorageKeyBuilder()->generateKey($synchronizationDataTransfer);
     }
 
+    protected function generateFallbackKey(int $idProductAbstract, string $locale): string
+    {
+        if (ProductStorageConfig::isCollectorCompatibilityMode()) {
+            return sprintf(
+                '%s.%s.resource.product_abstract.%s',
+                strtolower($this->getActualStoreName()),
+                strtolower($locale),
+                $idProductAbstract,
+            );
+        }
+
+        $synchronizationDataTransfer = new SynchronizationDataTransfer();
+        $synchronizationDataTransfer->setStore($this->getActualStoreName());
+        $synchronizationDataTransfer->setLocale($locale);
+        $synchronizationDataTransfer->setReference($idProductAbstract);
+
+        return $this->getStorageKeyBuilder()->generateKey($synchronizationDataTransfer);
+    }
+
+    /**
+     * @param array<string, mixed> $storageData
+     */
+    protected function isCurrentStoreInStorageData(array $storageData): bool
+    {
+        if (!isset($storageData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP])) {
+            return true;
+        }
+
+        return in_array($this->getActualStoreName(), $storageData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP], true);
+    }
+
     protected function getStoreName(): string
     {
-        if (static::$storeName === null) {
-            static::$storeName = $this->getFactory()
-                ->getStoreClient()
-                ->getCurrentStore()
-                ->getNameOrFail();
+        /** @var \Spryker\Client\ProductStorage\ProductStorageConfig $config */
+        $config = $this->getFactory()->getConfig();
+        if ($config->isProductAbstractStorageUnifiedEnabled()) {
+            return SharedProductStorageConfig::PRODUCT_ABSTRACT_STORAGE_UNIFIED_STORE_KEY;
         }
+
+        return $this->getActualStoreName();
+    }
+
+    protected function getActualStoreName(): string
+    {
+        if (static::$storeName !== null) {
+            return static::$storeName;
+        }
+
+        static::$storeName = $this->getFactory()
+            ->getStoreClient()
+            ->getCurrentStore()
+            ->getNameOrFail();
 
         return static::$storeName;
     }

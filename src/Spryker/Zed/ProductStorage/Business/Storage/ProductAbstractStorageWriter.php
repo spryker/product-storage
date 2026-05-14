@@ -10,11 +10,13 @@ namespace Spryker\Zed\ProductStorage\Business\Storage;
 use Generated\Shared\Transfer\ProductAbstractStorageTransfer;
 use Generated\Shared\Transfer\RawProductAttributesTransfer;
 use Orm\Zed\ProductStorage\Persistence\SpyProductAbstractStorage;
+use Spryker\Shared\ProductStorage\ProductStorageConfig as SharedProductStorageConfig;
 use Spryker\Zed\ProductStorage\Business\Attribute\AttributeMapInterface;
 use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface;
 use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface;
 use Spryker\Zed\ProductStorage\Persistence\ProductStorageQueryContainerInterface;
 use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
+use Spryker\Zed\ProductStorage\ProductStorageConfig;
 use Spryker\Zed\Propel\Persistence\BatchProcessor\ActiveRecordBatchProcessorTrait;
 
 class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterface
@@ -60,6 +62,8 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
      * @var string
      */
     protected const COL_PRODUCT_COUNT = 'productCount';
+
+    protected const string STORES_MAP = 'STORES_MAP';
 
     /**
      * @var \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface
@@ -108,13 +112,9 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
      */
     protected $productAbstractStorageCollectionFilterPlugins = [];
 
+    protected bool $isUnifiedStorageEnabled = false;
+
     /**
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToProductInterface $productFacade
-     * @param \Spryker\Zed\ProductStorage\Business\Attribute\AttributeMapInterface $attributeMap
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageQueryContainerInterface $queryContainer
-     * @param \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface $storeFacade
-     * @param \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface $productStorageRepository
-     * @param bool $isSendingToQueue
      * @param array<\Spryker\Zed\ProductStorageExtension\Dependency\Plugin\ProductAbstractStorageExpanderPluginInterface> $productAbstractStorageExpanderPlugins
      * @param array<\Spryker\Zed\ProductStorageExtension\Dependency\Plugin\ProductAbstractStorageCollectionFilterPluginInterface> $productAbstractStorageCollectionFilterPlugins
      */
@@ -124,18 +124,19 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
         ProductStorageQueryContainerInterface $queryContainer,
         ProductStorageToStoreFacadeInterface $storeFacade,
         ProductStorageRepositoryInterface $productStorageRepository,
-        $isSendingToQueue,
+        ProductStorageConfig $productStorageConfig,
         array $productAbstractStorageExpanderPlugins,
-        array $productAbstractStorageCollectionFilterPlugins
+        array $productAbstractStorageCollectionFilterPlugins,
     ) {
         $this->productFacade = $productFacade;
         $this->storeFacade = $storeFacade;
         $this->attributeMap = $attributeMap;
         $this->queryContainer = $queryContainer;
-        $this->isSendingToQueue = $isSendingToQueue;
+        $this->isSendingToQueue = $productStorageConfig->isSendingToQueue();
         $this->productAbstractStorageExpanderPlugins = $productAbstractStorageExpanderPlugins;
         $this->productAbstractStorageCollectionFilterPlugins = $productAbstractStorageCollectionFilterPlugins;
         $this->productStorageRepository = $productStorageRepository;
+        $this->isUnifiedStorageEnabled = $productStorageConfig->isProductAbstractStorageUnifiedEnabled();
     }
 
     /**
@@ -259,6 +260,7 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
                 $pair[static::STORE_NAME],
                 $pair[static::LOCALE_NAME],
                 $attributeMapBulk,
+                $pair[static::STORES_MAP] ?? [],
             );
         }
     }
@@ -282,6 +284,19 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
 
         $pairs = [];
         foreach ($productAbstractLocalizedEntities as $productAbstractLocalizedEntity) {
+            if ($this->isUnifiedStorageEnabled) {
+                [$pairs, $mappedProductAbstractStorageEntities] = $this->pairProductAbstractLocalizedEntitiesWithUnifiedProductAbstractStorageEntities(
+                    $productAbstractLocalizedEntity['SpyProductAbstract'][static::COL_ID_PRODUCT_ABSTRACT],
+                    $productAbstractLocalizedEntity['Locale']['locale_name'],
+                    $productAbstractLocalizedEntity['SpyProductAbstract']['SpyProductAbstractStores'],
+                    $productAbstractLocalizedEntity,
+                    $mappedProductAbstractStorageEntities,
+                    $pairs,
+                );
+
+                continue;
+            }
+
             [$pairs, $mappedProductAbstractStorageEntities] = $this->pairProductAbstractLocalizedEntitiesWithProductAbstractStorageEntitiesByStoresAndLocale(
                 $productAbstractLocalizedEntity['SpyProductAbstract'][static::COL_ID_PRODUCT_ABSTRACT],
                 $productAbstractLocalizedEntity['Locale']['locale_name'],
@@ -338,6 +353,45 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
         return [$pairs, $mappedProductAbstractStorageEntities];
     }
 
+    protected function pairProductAbstractLocalizedEntitiesWithUnifiedProductAbstractStorageEntities(
+        int $idProduct,
+        string $localeName,
+        array $productAbstractStoreEntities,
+        array $productAbstractLocalizedEntity,
+        array $mappedProductAbstractStorageEntities,
+        array $pairs
+    ): array {
+        $validStoreNames = [];
+        foreach ($productAbstractStoreEntities as $productAbstractStoreEntity) {
+            $storeName = $productAbstractStoreEntity['SpyStore']['name'];
+
+            if ($this->isValidStoreLocale($storeName, $localeName)) {
+                $validStoreNames[] = $storeName;
+            }
+        }
+
+        if (count($validStoreNames) === 0) {
+            return [$pairs, $mappedProductAbstractStorageEntities];
+        }
+
+        $unifiedStoreName = SharedProductStorageConfig::PRODUCT_ABSTRACT_STORAGE_UNIFIED_STORE_KEY;
+
+        $productAbstractStorageEntity = $mappedProductAbstractStorageEntities[$idProduct][$unifiedStoreName][$localeName]
+            ?? new SpyProductAbstractStorage();
+
+        unset($mappedProductAbstractStorageEntities[$idProduct][$unifiedStoreName][$localeName]);
+
+        $pairs[] = [
+            static::PRODUCT_ABSTRACT_LOCALIZED_ENTITY => $productAbstractLocalizedEntity,
+            static::PRODUCT_ABSTRACT_STORAGE_ENTITY => $productAbstractStorageEntity,
+            static::LOCALE_NAME => $localeName,
+            static::STORE_NAME => $unifiedStoreName,
+            static::STORES_MAP => $validStoreNames,
+        ];
+
+        return [$pairs, $mappedProductAbstractStorageEntities];
+    }
+
     protected function isValidStoreLocale(string $storeName, string $localeName): bool
     {
         return in_array($localeName, $this->storeFacade->getStoreByName($storeName)->getAvailableLocaleIsoCodes());
@@ -369,6 +423,7 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
      * @param string $storeName
      * @param string $localeName
      * @param array<string, \Generated\Shared\Transfer\AttributeMapStorageTransfer> $attributeMapBulk
+     * @param array<string> $storeNames
      *
      * @return void
      */
@@ -377,7 +432,8 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
         SpyProductAbstractStorage $spyProductStorageEntity,
         $storeName,
         $localeName,
-        array $attributeMapBulk = []
+        array $attributeMapBulk = [],
+        array $storeNames = []
     ) {
         $productAbstractStorageTransfer = $this->mapToProductAbstractStorageTransfer(
             $productAbstractLocalizedEntity,
@@ -387,9 +443,15 @@ class ProductAbstractStorageWriter implements ProductAbstractStorageWriterInterf
 
         $productAbstractStorageTransfer = $this->executeProductAbstractStorageExpanderPlugins($productAbstractStorageTransfer);
 
+        $data = $productAbstractStorageTransfer->toArray();
+
+        if (count($storeNames) > 0) {
+            $data[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP] = array_values($storeNames);
+        }
+
         $spyProductStorageEntity
             ->setFkProductAbstract($productAbstractLocalizedEntity['SpyProductAbstract'][static::COL_ID_PRODUCT_ABSTRACT])
-            ->setData($productAbstractStorageTransfer->toArray())
+            ->setData($data)
             ->setStore($storeName)
             ->setLocale($localeName)
             ->setIsSendingToQueue($this->isSendingToQueue);

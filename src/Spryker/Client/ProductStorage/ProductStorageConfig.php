@@ -9,6 +9,9 @@ namespace Spryker\Client\ProductStorage;
 
 use Spryker\Client\Kernel\AbstractBundleConfig;
 
+/**
+ * @method \Spryker\Shared\ProductStorage\ProductStorageConfig getSharedConfig()
+ */
 class ProductStorageConfig extends AbstractBundleConfig
 {
     /**
@@ -45,5 +48,33 @@ class ProductStorageConfig extends AbstractBundleConfig
     public static function isCollectorCompatibilityMode(): bool
     {
         return false;
+    }
+
+    /**
+     * Specification:
+     * - When true, product abstract data is read from a unified store key instead of a per-store key.
+     * - After reading, the current store is verified against product_abstract_stores_map in the payload.
+     * - Must match the Zed layer config.
+     *
+     * @api
+     */
+    public function isProductAbstractStorageUnifiedEnabled(): bool
+    {
+        return $this->getSharedConfig()->isProductAbstractStorageUnifiedEnabled();
+    }
+
+    /**
+     * Specification:
+     * - Applies only when `isProductAbstractStorageUnifiedEnabled()` returns true.
+     * - When true, the URL mapper verifies that the unified storage key exists in Redis before using it.
+     * - If the key is absent (product not yet re-published under the unified schema), the mapper falls
+     *   back to the per-store key format so URL resolution stays functional during migration.
+     * - Set to false once all products are fully published under unified keys to skip the Redis check.
+     *
+     * @api
+     */
+    public function isProductAbstractStorageUnifiedFallbackEnabled(): bool
+    {
+        return true;
     }
 }

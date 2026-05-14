@@ -24,4 +24,21 @@ class ProductStorageConfig extends AbstractSharedConfig
      * @var string
      */
     public const PUBLISH_PRODUCT_CONCRETE = 'publish.product_concrete';
+
+    public const string PRODUCT_ABSTRACT_STORES_MAP = 'product_abstract_stores_map';
+
+    public const string PRODUCT_ABSTRACT_STORAGE_UNIFIED_STORE_KEY = 'product_store_unified';
+
+    /**
+     * Specification:
+     * - When true, product abstract entries are stored once per locale under a unified store key.
+     * - The payload includes product_abstract_stores_map listing which stores carry the product.
+     * - Must be enabled consistently in both Zed and Client layers.
+     *
+     * @api
+     */
+    public function isProductAbstractStorageUnifiedEnabled(): bool
+    {
+        return false;
+    }
 }

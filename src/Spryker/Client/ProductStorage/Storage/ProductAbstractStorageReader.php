@@ -19,6 +19,7 @@ use Spryker\Client\ProductStorage\Exception\NotFoundProductAbstractDataCacheExce
 use Spryker\Client\ProductStorage\Filter\ProductAbstractAttributeMapRestrictionFilterInterface;
 use Spryker\Client\ProductStorage\ProductStorageConfig;
 use Spryker\Service\Synchronization\Dependency\Plugin\SynchronizationKeyGeneratorPluginInterface;
+use Spryker\Shared\ProductStorage\ProductStorageConfig as SharedProductStorageConfig;
 use Spryker\Shared\ProductStorage\ProductStorageConstants;
 
 class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterface
@@ -105,6 +106,8 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
      */
     protected $storeClient;
 
+    protected bool $isUnifiedStorageEnabled = false;
+
     /**
      * @param \Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStorageClientInterface $storageClient
      * @param \Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToSynchronizationServiceInterface $synchronizationService
@@ -118,8 +121,9 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         ProductStorageToSynchronizationServiceInterface $synchronizationService,
         ProductStorageToStoreClientInterface $storeClient,
         ProductAbstractAttributeMapRestrictionFilterInterface $productAbstractVariantsRestrictionFilter,
+        ProductStorageConfig $productStorageConfig,
         array $productAbstractRestrictionPlugins = [],
-        array $productAbstractRestrictionFilterPlugins = []
+        array $productAbstractRestrictionFilterPlugins = [],
     ) {
         $this->storageClient = $storageClient;
         $this->synchronizationService = $synchronizationService;
@@ -127,6 +131,7 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         $this->productAbstractRestrictionPlugins = $productAbstractRestrictionPlugins;
         $this->productAbstractRestrictionFilterPlugins = $productAbstractRestrictionFilterPlugins;
         $this->storeClient = $storeClient;
+        $this->isUnifiedStorageEnabled = $productStorageConfig->isProductAbstractStorageUnifiedEnabled();
     }
 
     /**
@@ -284,17 +289,22 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         }
 
         $key = $this->getStorageKey((string)$idProductAbstract, $localeName, $storeName);
-
         $productStorageData = $this->storageClient->get($key);
+
+        if (!$productStorageData && $this->isUnifiedStorageEnabled) {
+            $key = $this->getStorageKey((string)$idProductAbstract, $localeName, $this->getCurrentStoreName());
+            $productStorageData = $this->storageClient->get($key);
+        }
 
         if (!$productStorageData) {
             return null;
         }
 
-        $productStorageData = $this->productAbstractVariantsRestrictionFilter
-            ->filterAbstractProductVariantsData($productStorageData);
+        if ($this->isUnifiedStorageEnabled && !$this->isProductInCurrentStore($productStorageData)) {
+            return null;
+        }
 
-        return $productStorageData;
+        return $this->productAbstractVariantsRestrictionFilter->filterAbstractProductVariantsData($productStorageData);
     }
 
     /**
@@ -512,6 +522,10 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         string $localeName,
         string $storeName
     ): array {
+        if ($this->isUnifiedStorageEnabled) {
+            $storeName = SharedProductStorageConfig::PRODUCT_ABSTRACT_STORAGE_UNIFIED_STORE_KEY;
+        }
+
         $cachedProductAbstractStorageData = $this->getProductAbstractDataCacheByProductAbstractIdsForLocaleNameAndStore($productAbstractIds, $localeName, $storeName);
 
         $productAbstractIds = array_diff($productAbstractIds, array_keys($cachedProductAbstractStorageData));
@@ -540,8 +554,24 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
 
         $productStorageDataCollection = $this->storageClient->getMulti($this->generateStorageKeys($productAbstractIds, $localeName, $storeName));
         $productStorageDataCollection = array_filter($productStorageDataCollection);
+        $productAbstractStorageData = $this->mapBulkProductStorageData($productStorageDataCollection, $localeName, $storeName);
 
-        return $this->mapBulkProductStorageData($productStorageDataCollection, $localeName, $storeName);
+        if (!$this->isUnifiedStorageEnabled) {
+            return $productAbstractStorageData;
+        }
+
+        $missingProductAbstractIds = array_values(array_diff($productAbstractIds, array_keys($productAbstractStorageData)));
+
+        if (!$missingProductAbstractIds) {
+            return $productAbstractStorageData;
+        }
+
+        $fallbackStorageDataCollection = $this->storageClient->getMulti(
+            $this->generateStorageKeys($missingProductAbstractIds, $localeName, $this->getCurrentStoreName()),
+        );
+        $fallbackStorageDataCollection = array_filter($fallbackStorageDataCollection);
+
+        return $productAbstractStorageData + $this->mapBulkProductStorageData($fallbackStorageDataCollection, $localeName, $storeName);
     }
 
     /**
@@ -566,6 +596,11 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         $productAbstractStorageData = [];
         foreach ($productStorageDataCollection as $productStorageData) {
             $productStorageData = json_decode($productStorageData, true);
+
+            if ($this->isUnifiedStorageEnabled && !$this->isProductInCurrentStore($productStorageData)) {
+                continue;
+            }
+
             $filteredProductData = $this->productAbstractVariantsRestrictionFilter
                 ->filterAbstractProductVariantsData($productStorageData);
             $idProductAbstract = $filteredProductData[static::KEY_ID_PRODUCT_ABSTRACT];
@@ -645,10 +680,36 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
 
     protected function getStoreName(): string
     {
+        if ($this->isUnifiedStorageEnabled) {
+            return SharedProductStorageConfig::PRODUCT_ABSTRACT_STORAGE_UNIFIED_STORE_KEY;
+        }
+
+        return $this->getCurrentStoreName();
+    }
+
+    protected function getCurrentStoreName(): string
+    {
         if (static::$storeName === null) {
             static::$storeName = $this->storeClient->getCurrentStore()->getName();
         }
 
         return static::$storeName;
+    }
+
+    /**
+     * Returns false only when product_abstract_stores_map is present in the data and does not include the current store.
+     * When the field is absent the product predates unified storage and should be returned as-is.
+     *
+     * @param array<string, mixed> $productData
+     */
+    protected function isProductInCurrentStore(array $productData): bool
+    {
+        if (!isset($productData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP])) {
+            return true;
+        }
+
+        $currentStoreName = $this->storeClient->getCurrentStore()->getName();
+
+        return in_array($currentStoreName, $productData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP], true);
     }
 }

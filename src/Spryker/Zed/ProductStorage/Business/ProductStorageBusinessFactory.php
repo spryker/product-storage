@@ -44,7 +44,7 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
             $this->getQueryContainer(),
             $this->getStoreFacade(),
             $this->getRepository(),
-            $this->getConfig()->isSendingToQueue(),
+            $this->getConfig(),
             $this->getProductAbstractStorageExpanderPlugins(),
             $this->getProductAbstractStorageCollectionFilterPlugins(),
         );

@@ -10,6 +10,7 @@ namespace Spryker\Client\ProductStorage;
 use Spryker\Client\Kernel\AbstractFactory;
 use Spryker\Client\ProductStorage\Builder\ProductConcreteStorageUrlBuilder;
 use Spryker\Client\ProductStorage\Builder\ProductConcreteStorageUrlBuilderInterface;
+use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStorageClientInterface;
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStoreClientInterface;
 use Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilEncodingServiceInterface;
 use Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilSanitizeServiceInterface;
@@ -30,12 +31,12 @@ use Spryker\Client\ProductStorage\Mapper\ProductVariantExpander;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReader;
 
+/**
+ * @method \Spryker\Client\ProductStorage\ProductStorageConfig getConfig()
+ */
 class ProductStorageFactory extends AbstractFactory
 {
-    /**
-     * @return \Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStorageClientInterface
-     */
-    protected function getStorageClient()
+    public function getStorageClient(): ProductStorageToStorageClientInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::CLIENT_STORAGE);
     }
@@ -99,6 +100,7 @@ class ProductStorageFactory extends AbstractFactory
             $this->getSynchronizationService(),
             $this->getStoreClient(),
             $this->createProductAbstractAttributeMapRestrictionFilter(),
+            $this->getConfig(),
             $this->getProductAbstractRestrictionPlugins(),
             $this->getProductAbstractRestrictionFilterPlugins(),
         );

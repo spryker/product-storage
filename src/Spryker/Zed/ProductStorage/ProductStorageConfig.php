@@ -9,6 +9,9 @@ namespace Spryker\Zed\ProductStorage;
 
 use Spryker\Zed\Kernel\AbstractBundleConfig;
 
+/**
+ * @method \Spryker\Shared\ProductStorage\ProductStorageConfig getSharedConfig()
+ */
 class ProductStorageConfig extends AbstractBundleConfig
 {
     /**
@@ -90,5 +93,18 @@ class ProductStorageConfig extends AbstractBundleConfig
     public function isOptimizedAttributeVariantsMapEnabled(): bool
     {
         return false;
+    }
+
+    /**
+     * Specification:
+     * - When true, product abstract entries are stored once per locale under a unified store key.
+     * - The payload includes product_abstract_stores_map listing which stores carry the product.
+     * - Must be enabled consistently with the Client layer config.
+     *
+     * @api
+     */
+    public function isProductAbstractStorageUnifiedEnabled(): bool
+    {
+        return $this->getSharedConfig()->isProductAbstractStorageUnifiedEnabled();
     }
 }

@@ -182,11 +182,16 @@ class ProductStorageFacadeTest extends Unit
     protected function getProductStorageFacade(
         bool $isProductAttributesWithSingleValueIncluded = true
     ): ProductStorageFacadeInterface {
-        $configMock = $this->getConfigHelper()->mockConfigMethod(
+        $this->getConfigHelper()->mockConfigMethod(
             'isProductAttributesWithSingleValueIncluded',
             function () use ($isProductAttributesWithSingleValueIncluded) {
                 return $isProductAttributesWithSingleValueIncluded;
             },
+        );
+
+        $configMock = $this->getConfigHelper()->mockConfigMethod(
+            'isProductAbstractStorageUnifiedEnabled',
+            fn () => false,
         );
 
         $productStorageBusinessFactory = new ProductStorageBusinessFactory();
