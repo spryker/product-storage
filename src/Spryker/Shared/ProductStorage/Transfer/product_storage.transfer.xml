@@ -132,4 +132,10 @@
         <property name="idProductAbstract" type="int"/>
     </transfer>
 
+    <transfer name="ProductConcreteCriteriaFilter">
+    </transfer>
+
+    <transfer name="ProductConcretePageSearch">
+    </transfer>
+
 </transfers>

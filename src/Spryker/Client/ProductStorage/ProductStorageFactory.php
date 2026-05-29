@@ -28,6 +28,8 @@ use Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapper;
 use Spryker\Client\ProductStorage\Mapper\ProductStorageToProductConcreteTransferDataMapper;
 use Spryker\Client\ProductStorage\Mapper\ProductStorageToProductConcreteTransferDataMapperInterface;
 use Spryker\Client\ProductStorage\Mapper\ProductVariantExpander;
+use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcher;
+use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcherInterface;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReader;
 
@@ -230,5 +232,15 @@ class ProductStorageFactory extends AbstractFactory
     public function getStoreClient(): ProductStorageToStoreClientInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::CLIENT_STORE);
+    }
+
+    public function createProductConcreteStorageCatalogSearcher(): ProductConcreteStorageCatalogSearcherInterface
+    {
+        return new ProductConcreteStorageCatalogSearcher(
+            $this->createProductConcreteStorageReader(),
+            $this->createProductConcreteViewTransferFinder(),
+            $this->createProductAbstractViewTransferFinder(),
+            $this->getLocaleClient(),
+        );
     }
 }

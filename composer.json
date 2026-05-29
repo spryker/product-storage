@@ -5,6 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": ">=8.3",
+        "spryker/catalog-extension": "^1.2.0",
         "spryker/event-behavior": "^1.32.0",
         "spryker/kernel": "^3.77.0",
         "spryker/laminas": "^1.0.0",

@@ -597,7 +597,7 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
         foreach ($productStorageDataCollection as $productStorageData) {
             $productStorageData = json_decode($productStorageData, true);
 
-            if ($this->isUnifiedStorageEnabled && !$this->isProductInCurrentStore($productStorageData)) {
+            if ($this->isUnifiedStorageEnabled && !$this->isProductInCurrentStore($productStorageData, $storeName)) {
                 continue;
             }
 
@@ -702,14 +702,16 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
      *
      * @param array<string, mixed> $productData
      */
-    protected function isProductInCurrentStore(array $productData): bool
+    protected function isProductInCurrentStore(array $productData, ?string $storeName = null): bool
     {
-        if (!isset($productData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP])) {
+        if (!isset($productData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP]) || $storeName === SharedProductStorageConfig::PRODUCT_ABSTRACT_STORAGE_UNIFIED_STORE_KEY) {
             return true;
         }
 
-        $currentStoreName = $this->storeClient->getCurrentStore()->getName();
+        if ($storeName === null) {
+            $storeName = $this->getCurrentStoreName();
+        }
 
-        return in_array($currentStoreName, $productData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP], true);
+        return in_array($storeName, $productData[SharedProductStorageConfig::PRODUCT_ABSTRACT_STORES_MAP], true);
     }
 }
