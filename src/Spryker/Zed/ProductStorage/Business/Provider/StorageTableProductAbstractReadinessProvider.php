@@ -8,89 +8,50 @@
 namespace Spryker\Zed\ProductStorage\Business\Provider;
 
 use ArrayObject;
+use DateTime;
 use Generated\Shared\Transfer\ProductAbstractReadinessRequestTransfer;
 use Generated\Shared\Transfer\ProductReadinessTransfer;
-use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface;
+use Spryker\Client\ProductStorage\ProductStorageClientInterface;
 use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
 
 class StorageTableProductAbstractReadinessProvider implements ProductAbstractReadinessProviderInterface
 {
-    /**
-     * @var string
-     */
-    protected const TITLE_IN_STORAGE = 'In Storage table for store/locale';
+    protected const string TITLE_IN_STORAGE = 'In Storage table for store/locale';
 
-    /**
-     * @var string
-     */
-    protected const KEY_LOCALE = 'Locale';
+    protected const string KEY_LOCALE = 'Locale';
 
-    /**
-     * @var string
-     */
-    protected const KEY_LOCALE_NAME = 'locale_name';
+    protected const string KEY_LOCALE_NAME = 'locale_name';
 
-    /**
-     * @var string
-     */
-    protected const KEY_SPY_PRODUCT_ABSTRACT = 'SpyProductAbstract';
+    protected const string KEY_UPDATED_AT = 'updated_at';
 
-    /**
-     * @var string
-     */
-    protected const KEY_SPY_PRODUCT_ABSTRACT_STORES = 'SpyProductAbstractStores';
+    protected const string KEY_STORE = 'store';
 
-    /**
-     * @var string
-     */
-    protected const KEY_SPY_STORE = 'SpyStore';
+    protected const string KEY_LOCALE_CODE = 'locale';
 
-    /**
-     * @var string
-     */
-    protected const KEY_NAME = 'name';
+    protected const string KEY_STORAGE_KEY = 'key';
 
-    /**
-     * @var string
-     */
-    protected const FALLBACK_VALUE_NO_LOCALES = '-';
+    protected const string KEY_DATA = 'data';
 
-    /**
-     * @var string
-     */
-    protected const FALLBACK_VALUE_NO_STORES = '-';
+    protected const string KEY_STORAGE_TIMESTAMP = '_timestamp';
 
-    /**
-     * @var string
-     */
-    protected const FORMAT_LOCALE_SEPARATOR = ', ';
+    protected const string FALLBACK_VALUE = '-';
 
-    /**
-     * @var string
-     */
-    protected const FORMAT_STORE_LOCALE_SEPARATOR = ' | ';
+    protected const string FORMAT_DATE_OUTPUT = 'Y-m-d H:i:s';
 
-    /**
-     * @var string
-     */
-    protected const FORMAT_STORE_LOCALE = '%s: %s';
+    protected const string FORMAT_DATE_WITH_UTC = '%s UTC';
 
-    /**
-     * @var \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface
-     */
-    protected $productStorageRepository;
+    protected const string FORMAT_ROW = '%s: %s, storage: %s &mdash; Last updated. DB: <strong>%s</strong>. Storage: <strong>%s</strong>. Status: %s';
 
-    /**
-     * @var \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface
-     */
-    protected $storeFacade;
+    protected const string FORMAT_STORAGE_KEY_LINK = '<a href="/storage-gui/maintenance/key?key=%s" target="_blank">%s</a>';
+
+    protected const string STATUS_HTML_SYNCED = '<span style="color:green;font-weight:bold">Synced</span>';
+
+    protected const string STATUS_HTML_UNSYNCED = '<span style="color:red;font-weight:bold">Unsynced</span>';
 
     public function __construct(
-        ProductStorageRepositoryInterface $productStorageRepository,
-        ProductStorageToStoreFacadeInterface $storeFacade
+        protected ProductStorageRepositoryInterface $productStorageRepository,
+        protected ProductStorageClientInterface $productStorageClient,
     ) {
-        $this->productStorageRepository = $productStorageRepository;
-        $this->storeFacade = $storeFacade;
     }
 
     /**
@@ -104,123 +65,186 @@ class StorageTableProductAbstractReadinessProvider implements ProductAbstractRea
         ArrayObject $productReadinessTransfers
     ): ArrayObject {
         $idProductAbstract = $productAbstractReadinessRequestTransfer->getProductAbstract()->getIdProductAbstract();
-        $productAbstractStorageData = $this->productStorageRepository->getProductAbstractsByIds([$idProductAbstract]);
+        $productAbstractLocaleData = $this->productStorageRepository->getProductAbstractsByIds([$idProductAbstract]);
+        $storageEntries = $this->productStorageRepository->getProductAbstractStorageEntriesByIdProductAbstract($idProductAbstract);
 
-        $storeLocaleMap = $this->buildStoreLocaleMap($productAbstractStorageData);
-        $values = $this->formatStoreLocaleCombinations($storeLocaleMap);
+        $storageKeys = array_filter(array_column($storageEntries, static::KEY_STORAGE_KEY));
+        $storageDataByKey = $storageKeys ? $this->buildStorageKeyLookup(
+            $this->productStorageClient->getRawProductCollection($storageKeys),
+            array_values($storageKeys),
+        ) : [];
+
+        $dbUpdatedAtByLocale = $this->buildDbUpdatedAtByLocale($productAbstractLocaleData);
 
         $productReadinessTransfers->append(
             (new ProductReadinessTransfer())
                 ->setTitle(static::TITLE_IN_STORAGE)
-                ->setValues($values),
+                ->setValues($this->buildStorageRowValues($storageEntries, $dbUpdatedAtByLocale, $storageDataByKey)),
         );
 
         return $productReadinessTransfers;
     }
 
     /**
-     * @param array<mixed> $productAbstractStorageData
-     *
-     * @return array<string, array<string>>
-     */
-    protected function buildStoreLocaleMap(array $productAbstractStorageData): array
-    {
-        $storeLocaleMap = [];
-
-        foreach ($productAbstractStorageData as $row) {
-            $localeName = $this->extractLocaleName($row);
-            $stores = $this->extractStores($row);
-
-            foreach ($stores as $storeData) {
-                $storeName = $this->extractStoreName($storeData);
-                $storeLocaleMap[$storeName][] = $localeName;
-            }
-        }
-
-        return $this->removeDuplicateLocales($storeLocaleMap);
-    }
-
-    /**
-     * @param array<string, array<string>> $storeLocaleMap
+     * @param array<int, array<string, mixed>> $storageEntries
+     * @param array<string, string|null> $dbUpdatedAtByLocale
+     * @param array<string, mixed> $storageDataByKey
      *
      * @return array<string>
      */
-    protected function formatStoreLocaleCombinations(array $storeLocaleMap): array
+    protected function buildStorageRowValues(array $storageEntries, array $dbUpdatedAtByLocale, array $storageDataByKey): array
     {
-        $formattedParts = [];
-
-        foreach ($this->storeFacade->getAllStores() as $storeTransfer) {
-            $storeName = $storeTransfer->getName();
-            $locales = $storeLocaleMap[$storeName] ?? [];
-
-            $formattedParts[] = $this->formatStoreLocales($storeName, $locales);
+        if (!$storageEntries && !$dbUpdatedAtByLocale) {
+            return [static::FALLBACK_VALUE];
         }
 
-        return (bool)$formattedParts
-            ? [implode(static::FORMAT_STORE_LOCALE_SEPARATOR, $formattedParts)]
-            : [static::FALLBACK_VALUE_NO_STORES];
-    }
+        $values = [];
+        $localesInStorage = [];
 
-    /**
-     * @param array<string, array<string>> $storeLocaleMap
-     *
-     * @return array<string, array<string>>
-     */
-    protected function removeDuplicateLocales(array $storeLocaleMap): array
-    {
-        foreach ($storeLocaleMap as $storeName => $locales) {
-            $uniqueLocales = array_unique($locales);
-            sort($uniqueLocales);
-            $storeLocaleMap[$storeName] = $uniqueLocales;
+        foreach ($storageEntries as $entry) {
+            $locale = $entry[static::KEY_LOCALE_CODE];
+            $localesInStorage[$locale] = true;
+            $values[] = $this->formatStorageRow($entry, $dbUpdatedAtByLocale[$locale] ?? null, $storageDataByKey);
         }
 
-        return $storeLocaleMap;
-    }
+        foreach ($dbUpdatedAtByLocale as $locale => $dbUpdatedAt) {
+            if (isset($localesInStorage[$locale])) {
+                continue;
+            }
 
-    /**
-     * @param array<mixed> $row
-     *
-     * @return string
-     */
-    protected function extractLocaleName(array $row): string
-    {
-        return $row[static::KEY_LOCALE][static::KEY_LOCALE_NAME];
-    }
+            $dbFormatted = $dbUpdatedAt !== null
+                ? sprintf(static::FORMAT_DATE_WITH_UTC, $this->formatUpdatedAt($dbUpdatedAt))
+                : static::FALLBACK_VALUE;
 
-    /**
-     * @param array<mixed> $row
-     *
-     * @return array<mixed>
-     */
-    protected function extractStores(array $row): array
-    {
-        return $row[static::KEY_SPY_PRODUCT_ABSTRACT][static::KEY_SPY_PRODUCT_ABSTRACT_STORES] ?? [];
-    }
-
-    /**
-     * @param array<mixed> $storeData
-     *
-     * @return string
-     */
-    protected function extractStoreName(array $storeData): string
-    {
-        return $storeData[static::KEY_SPY_STORE][static::KEY_NAME];
-    }
-
-    /**
-     * @param string $storeName
-     * @param array<string> $locales
-     *
-     * @return string
-     */
-    protected function formatStoreLocales(string $storeName, array $locales): string
-    {
-        if (!$locales) {
-            return sprintf(static::FORMAT_STORE_LOCALE, $storeName, static::FALLBACK_VALUE_NO_LOCALES);
+            $values[] = sprintf(static::FORMAT_ROW, $locale, static::FALLBACK_VALUE, static::FALLBACK_VALUE, $dbFormatted, static::FALLBACK_VALUE, static::STATUS_HTML_UNSYNCED);
         }
 
-        $localeList = implode(static::FORMAT_LOCALE_SEPARATOR, $locales);
+        return $values;
+    }
 
-        return sprintf(static::FORMAT_STORE_LOCALE, $storeName, $localeList);
+    /**
+     * @param array<string, mixed> $entry
+     * @param array<string, mixed> $storageDataByKey
+     */
+    protected function formatStorageRow(array $entry, ?string $dbUpdatedAt, array $storageDataByKey): string
+    {
+        $locale = $entry[static::KEY_LOCALE_CODE];
+        $store = $entry[static::KEY_STORE];
+        $storageKey = $entry[static::KEY_STORAGE_KEY] ?? null;
+
+        $dbFormatted = $dbUpdatedAt !== null
+            ? sprintf(static::FORMAT_DATE_WITH_UTC, $this->formatUpdatedAt($dbUpdatedAt))
+            : static::FALLBACK_VALUE;
+
+        $rawStorageData = $storageKey !== null ? ($storageDataByKey[$storageKey] ?? null) : null;
+        $storageData = $rawStorageData !== null ? json_decode($rawStorageData, true) : null;
+        $storageFormatted = $this->formatStorageTimestamp($storageData);
+
+        $statusHtml = $this->isSynced($entry[static::KEY_DATA] ?? null, $storageData)
+            ? static::STATUS_HTML_SYNCED
+            : static::STATUS_HTML_UNSYNCED;
+
+        $storageKeyLink = $storageKey !== null
+            ? sprintf(static::FORMAT_STORAGE_KEY_LINK, $storageKey, $storageKey)
+            : static::FALLBACK_VALUE;
+
+        return sprintf(static::FORMAT_ROW, $locale, $store, $storageKeyLink, $dbFormatted, $storageFormatted, $statusHtml);
+    }
+
+    /**
+     * @param array<string, mixed> $storageDataByPrefixedKey
+     * @param array<string> $originalKeys
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildStorageKeyLookup(array $storageDataByPrefixedKey, array $originalKeys): array
+    {
+        $originalKeySet = array_flip($originalKeys);
+        $lookup = [];
+
+        foreach ($storageDataByPrefixedKey as $prefixedKey => $value) {
+            if (isset($originalKeySet[$prefixedKey])) {
+                $lookup[$prefixedKey] = $value;
+
+                continue;
+            }
+
+            $colonPosition = strpos($prefixedKey, ':');
+            if ($colonPosition === false) {
+                continue;
+            }
+
+            $keyWithoutPrefix = substr($prefixedKey, $colonPosition + 1);
+            if (isset($originalKeySet[$keyWithoutPrefix])) {
+                $lookup[$keyWithoutPrefix] = $value;
+            }
+        }
+
+        return $lookup;
+    }
+
+    /**
+     * @param array<string, mixed>|null $storageData
+     */
+    protected function formatStorageTimestamp(?array $storageData): string
+    {
+        $timestamp = $storageData[static::KEY_STORAGE_TIMESTAMP] ?? null;
+
+        if ($timestamp === null) {
+            return static::FALLBACK_VALUE;
+        }
+
+        $dateTime = (new DateTime())->setTimestamp((int)$timestamp);
+
+        return sprintf(static::FORMAT_DATE_WITH_UTC, $dateTime->format(static::FORMAT_DATE_OUTPUT));
+    }
+
+    /**
+     * @param array<string, mixed>|null $dbData
+     * @param array<string, mixed>|null $storageData
+     */
+    protected function isSynced(?array $dbData, ?array $storageData): bool
+    {
+        if ($dbData === null || $storageData === null) {
+            return false;
+        }
+
+        $storageDataWithoutTimestamp = $storageData;
+        unset($storageDataWithoutTimestamp[static::KEY_STORAGE_TIMESTAMP]);
+
+        return $dbData === $storageDataWithoutTimestamp;
+    }
+
+    protected function formatUpdatedAt(?string $updatedAt): string
+    {
+        if ($updatedAt === null) {
+            return static::FALLBACK_VALUE;
+        }
+
+        $dateTime = DateTime::createFromFormat('Y-m-d H:i:s.u', $updatedAt)
+            ?: DateTime::createFromFormat('Y-m-d H:i:s', $updatedAt);
+
+        if ($dateTime === false) {
+            return $updatedAt;
+        }
+
+        return $dateTime->format(static::FORMAT_DATE_OUTPUT);
+    }
+
+    /**
+     * @param array<mixed> $productAbstractLocaleData
+     *
+     * @return array<string, string|null>
+     */
+    protected function buildDbUpdatedAtByLocale(array $productAbstractLocaleData): array
+    {
+        $dbUpdatedAtByLocale = [];
+
+        foreach ($productAbstractLocaleData as $row) {
+            $locale = $row[static::KEY_LOCALE][static::KEY_LOCALE_NAME];
+            $dbUpdatedAtByLocale[$locale] = $row[static::KEY_UPDATED_AT] ?? null;
+        }
+
+        return $dbUpdatedAtByLocale;
     }
 }

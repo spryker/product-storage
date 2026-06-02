@@ -453,4 +453,17 @@ interface ProductStorageClientInterface
      * @return array<int, array<string, string>>
      */
     public function generateProductAttributesResetUrlQueryParameters(Request $request, array $productViewTransfers): array;
+
+    /**
+     * Specification:
+     * - Fetches multiple storage entries by their keys in a single batch request.
+     * - Returns an array keyed by "kv:{key}" with the raw stored value (string or null) per key.
+     *
+     * @api
+     *
+     * @param array<string> $keys
+     *
+     * @return array<string, string|null>
+     */
+    public function getRawProductCollection(array $keys): array;
 }

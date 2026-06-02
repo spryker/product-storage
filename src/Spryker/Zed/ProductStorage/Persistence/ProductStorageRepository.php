@@ -203,6 +203,49 @@ class ProductStorageRepository extends AbstractRepository implements ProductStor
     }
 
     /**
+     * @param int $idProductAbstract
+     *
+     * @return array<string, string>
+     */
+    /**
+     * {@inheritDoc}
+     */
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getProductAbstractStorageEntriesByIdProductAbstract(int $idProductAbstract): array
+    {
+        $rows = $this->getFactory()
+            ->createSpyProductAbstractStorageQuery()
+            ->filterByFkProductAbstract($idProductAbstract)
+            ->select([
+                SpyProductAbstractStorageTableMap::COL_STORE,
+                SpyProductAbstractStorageTableMap::COL_LOCALE,
+                SpyProductAbstractStorageTableMap::COL_UPDATED_AT,
+                SpyProductAbstractStorageTableMap::COL_KEY,
+                SpyProductAbstractStorageTableMap::COL_DATA,
+            ])
+            ->find()
+            ->getData();
+
+        $entries = [];
+
+        foreach ($rows as $row) {
+            $data = $row[SpyProductAbstractStorageTableMap::COL_DATA];
+            $entries[] = [
+                'store' => $row[SpyProductAbstractStorageTableMap::COL_STORE],
+                'locale' => $row[SpyProductAbstractStorageTableMap::COL_LOCALE],
+                'updated_at' => $row[SpyProductAbstractStorageTableMap::COL_UPDATED_AT],
+                'key' => $row[SpyProductAbstractStorageTableMap::COL_KEY],
+                'data' => is_string($data) ? json_decode($data, true) : $data,
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
      * @param array<int, int> $productAbstractIdTimestampMap
      *
      * @return array<int>

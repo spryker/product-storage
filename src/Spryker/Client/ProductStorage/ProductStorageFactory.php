@@ -32,12 +32,19 @@ use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCa
 use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcherInterface;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReader;
+use Spryker\Client\ProductStorage\Storage\ProductStorageMultiReader;
+use Spryker\Client\ProductStorage\Storage\ProductStorageMultiReaderInterface;
 
 /**
  * @method \Spryker\Client\ProductStorage\ProductStorageConfig getConfig()
  */
 class ProductStorageFactory extends AbstractFactory
 {
+    public function createProductStorageMultiReader(): ProductStorageMultiReaderInterface
+    {
+        return new ProductStorageMultiReader($this->getStorageClient());
+    }
+
     public function getStorageClient(): ProductStorageToStorageClientInterface
     {
         return $this->getProvidedDependency(ProductStorageDependencyProvider::CLIENT_STORAGE);

@@ -515,4 +515,18 @@ class ProductStorageClient extends AbstractClient implements ProductStorageClien
             ->createProductAttributesResetUrlGenerator()
             ->generateProductAttributesResetUrlQueryParameters($request, $productViewTransfers);
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param array<string> $keys
+     *
+     * @return array<string, string|null>
+     */
+    public function getRawProductCollection(array $keys): array
+    {
+        return $this->getFactory()->createProductStorageMultiReader()->getRawProductCollection($keys);
+    }
 }

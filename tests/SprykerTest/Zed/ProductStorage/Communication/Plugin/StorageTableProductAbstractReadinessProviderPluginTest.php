@@ -11,11 +11,10 @@ use ArrayObject;
 use Codeception\Test\Unit;
 use Generated\Shared\Transfer\ProductAbstractReadinessRequestTransfer;
 use Generated\Shared\Transfer\ProductAbstractTransfer;
-use Generated\Shared\Transfer\StoreTransfer;
+use Spryker\Client\ProductStorage\ProductStorageClientInterface;
 use Spryker\Zed\ProductStorage\Business\ProductStorageBusinessFactory;
 use Spryker\Zed\ProductStorage\Business\Provider\StorageTableProductAbstractReadinessProvider;
 use Spryker\Zed\ProductStorage\Communication\Plugin\ProductManagement\StorageTableProductAbstractReadinessProviderPlugin;
-use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface;
 use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
 
 /**
@@ -31,69 +30,184 @@ use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
  */
 class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
 {
-    public function testProvideFormatsStoresAndLocales(): void
+    protected const string STORAGE_KEY = 'product_abstract:de:de_de:123';
+
+    protected const string STORAGE_KEY_URL_PART = '/storage-gui/maintenance/key?key=';
+
+    public function testProvideReturnsFallbackWhenNoDataExists(): void
     {
         // Arrange
-        $idProductAbstract = 123;
-        $plugin = $this->createPluginWithMocks(
-            $this->createProductStorageRepositoryMockWithData(),
-            $this->createStoreFacadeMockWithLocales(['DE', 'US']),
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([], []),
+            $this->createStorageClientMockReturning([]),
         );
 
-        $requestTransfer = (new ProductAbstractReadinessRequestTransfer())
-            ->setProductAbstract((new ProductAbstractTransfer())->setIdProductAbstract($idProductAbstract));
-
         // Act
-        $result = $plugin->provide($requestTransfer, new ArrayObject());
-
-        // Assert
-        $this->assertCount(1, $result);
-        $productReadiness = $result[0];
-        $this->assertSame('In Storage table for store/locale', $productReadiness->getTitle());
-        $this->assertSame('DE: de_DE, en_US | US: fr_FR', $productReadiness->getValues()[0]);
-    }
-
-    public function testProvideReturnsDashWhenNoStoresProvided(): void
-    {
-        // Arrange
-        $plugin = $this->createPluginWithMocks(
-            $this->createProductStorageRepositoryMockWithNoData(),
-            $this->createEmptyStoreFacadeMock(),
-        );
-
-        $requestTransfer = (new ProductAbstractReadinessRequestTransfer())
-            ->setProductAbstract((new ProductAbstractTransfer())->setIdProductAbstract(456));
-
-        // Act
-        $result = $plugin->provide($requestTransfer, new ArrayObject());
+        $result = $plugin->provide($this->createRequest(456), new ArrayObject());
 
         // Assert
         $this->assertSame('-', $result[0]->getValues()[0]);
     }
 
-    public function testProvideHandlesPartialStoreCoverage(): void
+    public function testProvideReturnsStorageKeyLinkWhenStorageKeyExists(): void
     {
         // Arrange
-        $plugin = $this->createPluginWithMocks(
-            $this->createProductStorageRepositoryMockWithOneStore(),
-            $this->createStoreFacadeMockWithLocales(['DE', 'US']),
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [['Locale' => ['locale_name' => 'de_DE'], 'updated_at' => null]],
+                [$this->buildStorageEntry('de_DE', 'DE', static::STORAGE_KEY, null, null)],
+            ),
+            $this->createStorageClientMockReturning([]),
         );
 
-        $requestTransfer = (new ProductAbstractReadinessRequestTransfer())
-            ->setProductAbstract((new ProductAbstractTransfer())->setIdProductAbstract(789));
-
         // Act
-        $result = $plugin->provide($requestTransfer, new ArrayObject());
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
 
         // Assert
-        $this->assertSame('DE: de_DE | US: -', $result[0]->getValues()[0]);
+        $this->assertStringContainsString(static::STORAGE_KEY_URL_PART . static::STORAGE_KEY, $result[0]->getValues()[0]);
     }
 
-    protected function createPluginWithMocks(
+    public function testProvideReturnsSyncedStatusWhenStorageMatchesDatabase(): void
+    {
+        // Arrange
+        $dbData = ['id_product_abstract' => 123, 'name' => 'Test'];
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [['Locale' => ['locale_name' => 'de_DE'], 'updated_at' => '2024-01-15 10:30:00']],
+                [$this->buildStorageEntry('de_DE', 'DE', static::STORAGE_KEY, $dbData, '2024-01-15 10:30:00')],
+            ),
+            $this->createStorageClientMockReturning([
+                'kv:' . static::STORAGE_KEY => json_encode(array_merge($dbData, ['_timestamp' => 1705315800])),
+            ]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $row = $result[0]->getValues()[0];
+        $this->assertStringContainsString('Synced', $row);
+        $this->assertStringContainsString('de_DE', $row);
+        $this->assertStringContainsString('DE', $row);
+        $this->assertStringContainsString('2024-01-15 10:30:00 UTC', $row);
+    }
+
+    public function testProvideReturnsUnsyncedStatusWhenStorageKeyIsMissing(): void
+    {
+        // Arrange - storage key present in DB row but storage returns nothing for it
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [['Locale' => ['locale_name' => 'de_DE'], 'updated_at' => null]],
+                [$this->buildStorageEntry('de_DE', 'DE', static::STORAGE_KEY, ['name' => 'Test'], null)],
+            ),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $row = $result[0]->getValues()[0];
+        $this->assertStringContainsString('Unsynced', $row);
+        $this->assertStringContainsString(static::STORAGE_KEY_URL_PART . static::STORAGE_KEY, $row);
+    }
+
+    public function testProvideReturnsUnsyncedStatusWhenRowHasNoStorageKey(): void
+    {
+        // Arrange - no key column means the product was never synced to storage
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [['Locale' => ['locale_name' => 'en_US'], 'updated_at' => null]],
+                [$this->buildStorageEntry('en_US', 'US', null, null, null)],
+            ),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $row = $result[0]->getValues()[0];
+        $this->assertStringContainsString('Unsynced', $row);
+        // No clickable link when the storage key is absent
+        $this->assertStringNotContainsString(static::STORAGE_KEY_URL_PART, $row);
+    }
+
+    public function testProvideReturnsUnsyncedStatusWhenDataDiffersFromStorage(): void
+    {
+        // Arrange
+        $dbData = ['name' => 'Original'];
+        $storageData = ['name' => 'Different'];
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [['Locale' => ['locale_name' => 'de_DE'], 'updated_at' => null]],
+                [$this->buildStorageEntry('de_DE', 'DE', static::STORAGE_KEY, $dbData, null)],
+            ),
+            $this->createStorageClientMockReturning([
+                'kv:' . static::STORAGE_KEY => json_encode(array_merge($storageData, ['_timestamp' => 1705315800])),
+            ]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $this->assertStringContainsString('Unsynced', $result[0]->getValues()[0]);
+    }
+
+    public function testProvideIncludesDbOnlyLocaleWhenNotInStorage(): void
+    {
+        // Arrange - locale exists in the DB locale table but has no storage entry yet
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [['Locale' => ['locale_name' => 'de_DE'], 'updated_at' => '2024-01-15 10:30:00']],
+                [],
+            ),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert - missing storage entry produces an Unsynced row with the DB timestamp
+        $row = $result[0]->getValues()[0];
+        $this->assertStringContainsString('Unsynced', $row);
+        $this->assertStringContainsString('de_DE', $row);
+        $this->assertStringContainsString('2024-01-15 10:30:00 UTC', $row);
+    }
+
+    public function testProvideReturnsOneValuePerStorageRow(): void
+    {
+        // Arrange
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning(
+                [
+                    ['Locale' => ['locale_name' => 'de_DE'], 'updated_at' => null],
+                    ['Locale' => ['locale_name' => 'en_US'], 'updated_at' => null],
+                ],
+                [
+                    $this->buildStorageEntry('de_DE', 'DE', null, null, null),
+                    $this->buildStorageEntry('en_US', 'US', null, null, null),
+                ],
+            ),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $this->assertCount(2, $result[0]->getValues());
+    }
+
+    protected function createPlugin(
         ProductStorageRepositoryInterface $repositoryMock,
-        ProductStorageToStoreFacadeInterface $storeFacadeMock
+        ProductStorageClientInterface $storageClientMock,
     ): StorageTableProductAbstractReadinessProviderPlugin {
-        $provider = new StorageTableProductAbstractReadinessProvider($repositoryMock, $storeFacadeMock);
+        $provider = new StorageTableProductAbstractReadinessProvider(
+            $repositoryMock,
+            $storageClientMock,
+        );
 
         $factoryMock = $this->getMockBuilder(ProductStorageBusinessFactory::class)
             ->disableOriginalConstructor()
@@ -109,127 +223,48 @@ class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
     }
 
     /**
-     * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    protected function createProductStorageRepositoryMockWithData(): ProductStorageRepositoryInterface
-    {
-        $repositoryMock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)
-            ->getMock();
-
-        $productStorageData = [
-            [
-                'Locale' => ['locale_name' => 'de_DE'],
-                'SpyProductAbstract' => [
-                    'SpyProductAbstractStores' => [
-                        [
-                            'SpyStore' => ['name' => 'DE'],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                'Locale' => ['locale_name' => 'en_US'],
-                'SpyProductAbstract' => [
-                    'SpyProductAbstractStores' => [
-                        [
-                            'SpyStore' => ['name' => 'DE'],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                'Locale' => ['locale_name' => 'fr_FR'],
-                'SpyProductAbstract' => [
-                    'SpyProductAbstractStores' => [
-                        [
-                            'SpyStore' => ['name' => 'US'],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $repositoryMock->method('getProductAbstractsByIds')->willReturn($productStorageData);
-
-        return $repositoryMock;
-    }
-
-    /**
-     * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    protected function createProductStorageRepositoryMockWithNoData(): ProductStorageRepositoryInterface
-    {
-        $repositoryMock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)
-            ->getMock();
-
-        $repositoryMock->method('getProductAbstractsByIds')->willReturn([]);
-
-        return $repositoryMock;
-    }
-
-    /**
-     * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    protected function createProductStorageRepositoryMockWithOneStore(): ProductStorageRepositoryInterface
-    {
-        $repositoryMock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)
-            ->getMock();
-
-        $productStorageData = [
-            [
-                'Locale' => ['locale_name' => 'de_DE'],
-                'SpyProductAbstract' => [
-                    'SpyProductAbstractStores' => [
-                        [
-                            'SpyStore' => ['name' => 'DE'],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $repositoryMock->method('getProductAbstractsByIds')->willReturn($productStorageData);
-
-        return $repositoryMock;
-    }
-
-    /**
-     * @param array<string> $storeNames
+     * @param array<array<string, mixed>> $localeData
+     * @param array<array<string, mixed>> $storageEntries
      *
-     * @return \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected function createStoreFacadeMockWithLocales(array $storeNames): ProductStorageToStoreFacadeInterface
+    protected function createRepositoryMockReturning(array $localeData, array $storageEntries): ProductStorageRepositoryInterface
     {
-        $storeFacadeMock = $this->getMockBuilder(ProductStorageToStoreFacadeInterface::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getAllStores', 'getStoreByName'])
-            ->getMock();
+        $mock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)->getMock();
+        $mock->method('getProductAbstractsByIds')->willReturn($localeData);
+        $mock->method('getProductAbstractStorageEntriesByIdProductAbstract')->willReturn($storageEntries);
 
-        $stores = [];
-        foreach ($storeNames as $storeName) {
-            $store = (new StoreTransfer())->setName($storeName);
-            $stores[] = $store;
-            $storeFacadeMock->method('getStoreByName')->with($storeName)->willReturn($store);
-        }
-
-        $storeFacadeMock->method('getAllStores')->willReturn($stores);
-
-        return $storeFacadeMock;
+        return $mock;
     }
 
     /**
-     * @return \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected function createEmptyStoreFacadeMock(): ProductStorageToStoreFacadeInterface
+    protected function createStorageClientMockReturning(array $data): ProductStorageClientInterface
     {
-        $storeFacadeMock = $this->getMockBuilder(ProductStorageToStoreFacadeInterface::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getAllStores', 'getStoreByName'])
-            ->getMock();
+        $mock = $this->getMockBuilder(ProductStorageClientInterface::class)->getMock();
+        $mock->method('getRawProductCollection')->willReturn($data);
 
-        $storeFacadeMock->method('getAllStores')->willReturn([]);
-        $storeFacadeMock->method('getStoreByName')->willReturn(new StoreTransfer());
+        return $mock;
+    }
 
-        return $storeFacadeMock;
+    protected function createRequest(int $idProductAbstract): ProductAbstractReadinessRequestTransfer
+    {
+        return (new ProductAbstractReadinessRequestTransfer())
+            ->setProductAbstract((new ProductAbstractTransfer())->setIdProductAbstract($idProductAbstract));
+    }
+
+    /**
+     * @param array<string, mixed>|null $data
+     */
+    protected function buildStorageEntry(string $locale, string $store, ?string $storageKey, ?array $data, ?string $updatedAt): array
+    {
+        return [
+            'locale' => $locale,
+            'store' => $store,
+            'key' => $storageKey,
+            'data' => $data,
+            'updated_at' => $updatedAt,
+        ];
     }
 }

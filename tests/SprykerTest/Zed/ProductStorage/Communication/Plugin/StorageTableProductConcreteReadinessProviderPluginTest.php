@@ -11,11 +11,10 @@ use ArrayObject;
 use Codeception\Test\Unit;
 use Generated\Shared\Transfer\ProductConcreteReadinessRequestTransfer;
 use Generated\Shared\Transfer\ProductConcreteTransfer;
-use Generated\Shared\Transfer\StoreTransfer;
+use Spryker\Client\ProductStorage\ProductStorageClientInterface;
 use Spryker\Zed\ProductStorage\Business\ProductStorageBusinessFactory;
 use Spryker\Zed\ProductStorage\Business\Provider\StorageTableProductConcreteReadinessProvider;
 use Spryker\Zed\ProductStorage\Communication\Plugin\ProductManagement\StorageTableProductConcreteReadinessProviderPlugin;
-use Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface;
 use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
 
 /**
@@ -31,70 +30,152 @@ use Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface;
  */
 class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
 {
-    public function testProvideFormatsLocales(): void
+    protected const string STORAGE_KEY = 'product_concrete:de_de:123';
+
+    protected const string STORAGE_KEY_URL_PART = '/storage-gui/maintenance/key?key=';
+
+    public function testProvideReturnsFallbackWhenNoDataExists(): void
     {
         // Arrange
-        $idProductConcrete = 123;
-        $plugin = $this->createPluginWithMocks(
-            $this->createProductStorageRepositoryMockWithLocales(['de_DE', 'en_US', 'fr_FR']),
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([]),
+            $this->createStorageClientMockReturning([]),
         );
 
-        $requestTransfer = (new ProductConcreteReadinessRequestTransfer())
-            ->setProductConcrete((new ProductConcreteTransfer())->setIdProductConcrete($idProductConcrete));
-
         // Act
-        $result = $plugin->provide($requestTransfer, new ArrayObject());
+        $result = $plugin->provide($this->createRequest(456), new ArrayObject());
 
         // Assert
-        $this->assertCount(1, $result);
-        $productReadiness = $result[0];
-        $this->assertSame('In Storage table for locale', $productReadiness->getTitle());
-        $this->assertSame('de_DE, en_US, fr_FR', $productReadiness->getValues()[0]);
+        $this->assertCount(1, $result->getArrayCopy());
+        $this->assertSame('-', $result->getArrayCopy()[0]->getValues()[0]);
     }
 
-    public function testProvideReturnsDashWhenNoLocalesProvided(): void
+    public function testProvideReturnsStorageKeyLinkWhenStorageKeyExists(): void
     {
         // Arrange
-        $plugin = $this->createPluginWithMocks(
-            $this->createProductStorageRepositoryMockWithNoData(),
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([
+                $this->buildStorageRow('de_DE', static::STORAGE_KEY, null, null),
+            ]),
+            $this->createStorageClientMockReturning([]),
         );
 
-        $requestTransfer = (new ProductConcreteReadinessRequestTransfer())
-            ->setProductConcrete((new ProductConcreteTransfer())->setIdProductConcrete(456));
-
         // Act
-        $result = $plugin->provide($requestTransfer, new ArrayObject());
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
 
         // Assert
-        $this->assertSame('-', $result[0]->getValues()[0]);
+        $row = $result->getArrayCopy()[0]->getValues()[0];
+        $this->assertStringContainsString(static::STORAGE_KEY_URL_PART . static::STORAGE_KEY, $row);
     }
 
-    public function testProvideRemovesDuplicateLocales(): void
+    public function testProvideReturnsSyncedStatusWhenStorageMatchesDatabase(): void
     {
         // Arrange
-        $idProductConcrete = 789;
-        $plugin = $this->createPluginWithMocks(
-            $this->createProductStorageRepositoryMockWithLocales(['de_DE', 'en_US', 'de_DE']),
+        $dbData = ['id_product' => 123, 'sku' => 'SKU-123', 'name' => 'Test'];
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([
+                $this->buildStorageRow('de_DE', static::STORAGE_KEY, $dbData, '2024-01-15 10:30:00'),
+            ]),
+            $this->createStorageClientMockReturning([
+                'kv:' . static::STORAGE_KEY => json_encode(array_merge($dbData, ['_timestamp' => 1705315800])),
+            ]),
         );
 
-        $requestTransfer = (new ProductConcreteReadinessRequestTransfer())
-            ->setProductConcrete((new ProductConcreteTransfer())->setIdProductConcrete($idProductConcrete));
-
         // Act
-        $result = $plugin->provide($requestTransfer, new ArrayObject());
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
 
         // Assert
-        $this->assertSame('de_DE, en_US', $result[0]->getValues()[0]);
+        $row = $result->getArrayCopy()[0]->getValues()[0];
+        $this->assertStringContainsString('Synced', $row);
+        $this->assertStringContainsString('de_DE', $row);
+        $this->assertStringContainsString('2024-01-15 10:30:00 UTC', $row);
     }
 
-    protected function createPluginWithMocks(
-        ProductStorageRepositoryInterface $repositoryMock
+    public function testProvideReturnsUnsyncedStatusWhenStorageKeyIsMissing(): void
+    {
+        // Arrange - storage key present in DB row but storage returns nothing for it
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([
+                $this->buildStorageRow('de_DE', static::STORAGE_KEY, ['sku' => 'SKU-123'], null),
+            ]),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $row = $result->getArrayCopy()[0]->getValues()[0];
+        $this->assertStringContainsString('Unsynced', $row);
+        $this->assertStringContainsString(static::STORAGE_KEY_URL_PART . static::STORAGE_KEY, $row);
+    }
+
+    public function testProvideReturnsUnsyncedStatusWhenRowHasNoStorageKey(): void
+    {
+        // Arrange - no key column means product was never synced to storage
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([
+                $this->buildStorageRow('en_US', null, null, null),
+            ]),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $row = $result->getArrayCopy()[0]->getValues()[0];
+        $this->assertStringContainsString('Unsynced', $row);
+        // No link when key is absent
+        $this->assertStringNotContainsString(static::STORAGE_KEY_URL_PART, $row);
+    }
+
+    public function testProvideReturnsUnsyncedStatusWhenDataDiffersFromStorage(): void
+    {
+        // Arrange
+        $dbData = ['sku' => 'SKU-123'];
+        $storageData = ['sku' => 'SKU-DIFFERENT'];
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([
+                $this->buildStorageRow('de_DE', static::STORAGE_KEY, $dbData, null),
+            ]),
+            $this->createStorageClientMockReturning([
+                'kv:' . static::STORAGE_KEY => json_encode(array_merge($storageData, ['_timestamp' => 1705315800])),
+            ]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $this->assertStringContainsString('Unsynced', $result->getArrayCopy()[0]->getValues()[0]);
+    }
+
+    public function testProvideReturnsOneValuePerStorageRow(): void
+    {
+        // Arrange
+        $plugin = $this->createPlugin(
+            $this->createRepositoryMockReturning([
+                $this->buildStorageRow('de_DE', null, null, null),
+                $this->buildStorageRow('en_US', null, null, null),
+            ]),
+            $this->createStorageClientMockReturning([]),
+        );
+
+        // Act
+        $result = $plugin->provide($this->createRequest(123), new ArrayObject());
+
+        // Assert
+        $this->assertCount(2, $result->getArrayCopy()[0]->getValues());
+    }
+
+    protected function createPlugin(
+        ProductStorageRepositoryInterface $repositoryMock,
+        ProductStorageClientInterface $storageClientMock,
     ): StorageTableProductConcreteReadinessProviderPlugin {
-        $storeFacadeMock = $this->createEmptyStoreFacadeMock();
-
         $provider = new StorageTableProductConcreteReadinessProvider(
             $repositoryMock,
-            $storeFacadeMock,
+            $storageClientMock,
         );
 
         $factoryMock = $this->getMockBuilder(ProductStorageBusinessFactory::class)
@@ -111,55 +192,43 @@ class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
     }
 
     /**
-     * @param array<string> $localeNames
-     *
      * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected function createProductStorageRepositoryMockWithLocales(array $localeNames): ProductStorageRepositoryInterface
+    protected function createRepositoryMockReturning(array $data): ProductStorageRepositoryInterface
     {
-        $repositoryMock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)
-            ->getMock();
+        $mock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)->getMock();
+        $mock->method('getProductConcretesByIds')->willReturn($data);
 
-        $productStorageData = [];
-        foreach ($localeNames as $localeName) {
-            $productStorageData[] = [
-                'fk_product' => 123,
-                'locale' => $localeName,
-                'data' => '{}',
-            ];
-        }
-
-        $repositoryMock->method('getProductConcretesByIds')->willReturn($productStorageData);
-
-        return $repositoryMock;
+        return $mock;
     }
 
     /**
-     * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected function createProductStorageRepositoryMockWithNoData(): ProductStorageRepositoryInterface
+    protected function createStorageClientMockReturning(array $data): ProductStorageClientInterface
     {
-        $repositoryMock = $this->getMockBuilder(ProductStorageRepositoryInterface::class)
-            ->getMock();
+        $mock = $this->getMockBuilder(ProductStorageClientInterface::class)->getMock();
+        $mock->method('getRawProductCollection')->willReturn($data);
 
-        $repositoryMock->method('getProductConcretesByIds')->willReturn([]);
+        return $mock;
+    }
 
-        return $repositoryMock;
+    protected function createRequest(int $idProductConcrete): ProductConcreteReadinessRequestTransfer
+    {
+        return (new ProductConcreteReadinessRequestTransfer())
+            ->setProductConcrete((new ProductConcreteTransfer())->setIdProductConcrete($idProductConcrete));
     }
 
     /**
-     * @return \Spryker\Zed\ProductStorage\Dependency\Facade\ProductStorageToStoreFacadeInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @param array<string, mixed>|null $data
      */
-    protected function createEmptyStoreFacadeMock(): ProductStorageToStoreFacadeInterface
+    protected function buildStorageRow(string $locale, ?string $storageKey, ?array $data, ?string $updatedAt): array
     {
-        $storeFacadeMock = $this->getMockBuilder(ProductStorageToStoreFacadeInterface::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getAllStores', 'getStoreByName'])
-            ->getMock();
-
-        $storeFacadeMock->method('getAllStores')->willReturn([]);
-        $storeFacadeMock->method('getStoreByName')->willReturn(new StoreTransfer());
-
-        return $storeFacadeMock;
+        return [
+            'locale' => $locale,
+            'key' => $storageKey,
+            'data' => $data,
+            'updated_at' => $updatedAt,
+        ];
     }
 }

@@ -145,7 +145,7 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
     {
         return new StorageTableProductAbstractReadinessProvider(
             $this->getRepository(),
-            $this->getStoreFacade(),
+            $this->getProductStorageClient(),
         );
     }
 
@@ -161,7 +161,7 @@ class ProductStorageBusinessFactory extends AbstractBusinessFactory
     {
         return new StorageTableProductConcreteReadinessProvider(
             $this->getRepository(),
-            $this->getStoreFacade(),
+            $this->getProductStorageClient(),
         );
     }
 

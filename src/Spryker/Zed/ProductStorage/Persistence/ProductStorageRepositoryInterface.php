@@ -75,4 +75,14 @@ interface ProductStorageRepositoryInterface
      * @return array<int>
      */
     public function getProductAbstractIdsByProductIds(array $productIds): array;
+
+    /**
+     * Returns one entry per row in spy_product_abstract_storage for the given product abstract.
+     * Each entry contains store, locale, updated_at, the Redis key, and the decoded data payload.
+     *
+     * @param int $idProductAbstract
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProductAbstractStorageEntriesByIdProductAbstract(int $idProductAbstract): array;
 }
