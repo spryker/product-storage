@@ -12,6 +12,8 @@ use Spryker\Shared\Kernel\AbstractSharedConfig;
 class ProductStorageConfig extends AbstractSharedConfig
 {
     /**
+     * @api
+     *
      * Defines queue name for publish.
      *
      * @var string
@@ -19,6 +21,8 @@ class ProductStorageConfig extends AbstractSharedConfig
     public const PUBLISH_PRODUCT_ABSTRACT = 'publish.product_abstract';
 
     /**
+     * @api
+     *
      * Defines queue name for publish.
      *
      * @var string

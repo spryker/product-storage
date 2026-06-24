@@ -15,6 +15,8 @@ use Spryker\Client\Kernel\AbstractBundleConfig;
 class ProductStorageConfig extends AbstractBundleConfig
 {
     /**
+     * @api
+     *
      * @uses \Spryker\Shared\Product\ProductConfig::RESOURCE_TYPE_ATTRIBUTE_MAP
      *
      * @var string
@@ -22,6 +24,8 @@ class ProductStorageConfig extends AbstractBundleConfig
     public const RESOURCE_TYPE_ATTRIBUTE_MAP = 'attribute_map';
 
     /**
+     * @api
+     *
      * @uses \Spryker\Shared\Product\ProductConfig::VARIANT_LEAF_NODE_ID
      *
      * @var string
@@ -29,6 +33,8 @@ class ProductStorageConfig extends AbstractBundleConfig
     public const VARIANT_LEAF_NODE_ID = 'id_product_concrete';
 
     /**
+     * @api
+     *
      * @uses \Spryker\Shared\Product\ProductConfig::ATTRIBUTE_MAP_PATH_DELIMITER
      *
      * @phpstan-var non-empty-string
