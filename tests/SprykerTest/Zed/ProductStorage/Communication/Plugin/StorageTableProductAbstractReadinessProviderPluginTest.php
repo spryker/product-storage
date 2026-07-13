@@ -238,6 +238,8 @@ class StorageTableProductAbstractReadinessProviderPluginTest extends Unit
     }
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface|\PHPUnit\Framework\MockObject\MockObject
      */
     protected function createStorageClientMockReturning(array $data): ProductStorageClientInterface

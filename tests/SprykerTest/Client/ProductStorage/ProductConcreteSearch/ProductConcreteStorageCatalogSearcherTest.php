@@ -10,6 +10,7 @@ namespace SprykerTest\Client\ProductStorage\ProductConcreteSearch;
 use Codeception\Test\Unit;
 use Generated\Shared\Transfer\AttributeMapStorageTransfer;
 use Generated\Shared\Transfer\ProductConcreteCriteriaFilterTransfer;
+use Generated\Shared\Transfer\ProductImageStorageTransfer;
 use Generated\Shared\Transfer\ProductViewTransfer;
 use PHPUnit\Framework\MockObject\MockObject;
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToLocaleInterface;
@@ -37,6 +38,10 @@ class ProductConcreteStorageCatalogSearcherTest extends Unit
     protected const int PRODUCT_CONCRETE_ID = 200;
 
     protected const string PRODUCT_CONCRETE_SKU = 'test-concrete-sku-001';
+
+    protected const string IMAGE_URL_SMALL = 'https://example.com/image-small.jpg';
+
+    protected const string IMAGE_URL_LARGE = 'https://example.com/image-large.jpg';
 
     /**
      * @uses \Spryker\Client\Catalog\Plugin\Elasticsearch\ResultFormatter\ProductConcreteCatalogSearchResultFormatterPlugin::NAME
@@ -111,6 +116,45 @@ class ProductConcreteStorageCatalogSearcherTest extends Unit
         // Assert
         $this->assertCount(1, $result[static::RESULT_FORMATTER_KEY]);
         $this->assertSame(static::PRODUCT_CONCRETE_SKU, $result[static::RESULT_FORMATTER_KEY][0]->getSku());
+        // A product view without images must map to an empty images list rather than fail.
+        $this->assertSame([], $result[static::RESULT_FORMATTER_KEY][0]->getImages());
+    }
+
+    public function testGivenProductViewWithImagesWhenSearchingProductConcretesThenMapsImagesToPageSearchTransfer(): void
+    {
+        // Arrange
+        $productImageStorageTransfer = (new ProductImageStorageTransfer())
+            ->setExternalUrlSmall(static::IMAGE_URL_SMALL)
+            ->setExternalUrlLarge(static::IMAGE_URL_LARGE);
+        $concreteViewTransfer = (new ProductViewTransfer())
+            ->setIdProductConcrete(static::PRODUCT_CONCRETE_ID)
+            ->setSku(static::PRODUCT_CONCRETE_SKU)
+            ->addImage($productImageStorageTransfer);
+
+        $readerMock = $this->createProductConcreteStorageReaderMock();
+        $readerMock->method('findProductConcreteStorageDataByMappingForCurrentLocale')
+            ->willReturn(['id_product_concrete' => static::PRODUCT_CONCRETE_ID]);
+
+        $concreteFinderMock = $this->createProductViewTransferFinderMock();
+        $concreteFinderMock->method('getProductViewTransfers')
+            ->with([static::PRODUCT_CONCRETE_ID], static::LOCALE_EN)
+            ->willReturn([$concreteViewTransfer]);
+
+        $searcher = $this->createSearcher(
+            readerMock: $readerMock,
+            concreteFinderMock: $concreteFinderMock,
+        );
+
+        // Act
+        $result = $searcher->searchProductConcretes(
+            (new ProductConcreteCriteriaFilterTransfer())->setSearchString(static::PRODUCT_CONCRETE_SKU),
+        );
+
+        // Assert
+        $images = $result[static::RESULT_FORMATTER_KEY][0]->getImages();
+        $this->assertCount(1, $images);
+        $this->assertSame(static::IMAGE_URL_SMALL, $images[0]->getExternalUrlSmall());
+        $this->assertSame(static::IMAGE_URL_LARGE, $images[0]->getExternalUrlLarge());
     }
 
     public function testGivenAbstractSearchResultsWhenHydratingConcretesThenReturnsMappedTransfers(): void

@@ -192,6 +192,8 @@ class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
     }
 
     /**
+     * @param array<array<string, mixed>> $data
+     *
      * @return \Spryker\Zed\ProductStorage\Persistence\ProductStorageRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
      */
     protected function createRepositoryMockReturning(array $data): ProductStorageRepositoryInterface
@@ -203,6 +205,8 @@ class StorageTableProductConcreteReadinessProviderPluginTest extends Unit
     }
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @return \Spryker\Client\ProductStorage\ProductStorageClientInterface|\PHPUnit\Framework\MockObject\MockObject
      */
     protected function createStorageClientMockReturning(array $data): ProductStorageClientInterface

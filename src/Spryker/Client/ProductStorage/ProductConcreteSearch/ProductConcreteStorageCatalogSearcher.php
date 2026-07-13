@@ -208,7 +208,8 @@ class ProductConcreteStorageCatalogSearcher implements ProductConcreteStorageCat
                 ->setFkProduct($productViewTransfer->getIdProductConcrete())
                 ->setFkProductAbstract($productViewTransfer->getIdProductAbstract())
                 ->setSku($productViewTransfer->getSku())
-                ->setName($productViewTransfer->getName());
+                ->setName($productViewTransfer->getName())
+                ->setImages($productViewTransfer->getImages()->getArrayCopy());
         }
 
         return $productConcretePageSearchTransfers;

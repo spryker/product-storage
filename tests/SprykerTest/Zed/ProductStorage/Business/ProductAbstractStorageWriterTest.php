@@ -216,6 +216,7 @@ class ProductAbstractStorageWriterTest extends Unit
     }
 
     /**
+     * @param array<array<string, mixed>> $localizedEntities
      * @param array<\Orm\Zed\ProductStorage\Persistence\SpyProductAbstractStorage> $existingStorageEntities
      *
      * @return array<array<string, mixed>>
