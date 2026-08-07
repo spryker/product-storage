@@ -205,6 +205,7 @@ class ProductConcreteStorageCatalogSearcher implements ProductConcreteStorageCat
 
         foreach ($productViewTransfers as $productViewTransfer) {
             $productConcretePageSearchTransfers[] = (new ProductConcretePageSearchTransfer())
+                ->fromArray($productViewTransfer->toArray(), true)
                 ->setFkProduct($productViewTransfer->getIdProductConcrete())
                 ->setFkProductAbstract($productViewTransfer->getIdProductAbstract())
                 ->setSku($productViewTransfer->getSku())

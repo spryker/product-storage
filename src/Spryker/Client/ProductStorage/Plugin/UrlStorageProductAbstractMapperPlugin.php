@@ -33,7 +33,8 @@ class UrlStorageProductAbstractMapperPlugin extends AbstractPlugin implements Ur
     protected static $storeName;
 
     /**
-     * @param \Generated\Shared\Transfer\UrlStorageTransfer $urlStorageTransfer
+     * {@inheritDoc}
+     *
      * @param array<string, mixed> $options
      *
      * @return \Generated\Shared\Transfer\UrlStorageResourceMapTransfer
