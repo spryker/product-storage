@@ -17,6 +17,7 @@ use Orm\Zed\Url\Persistence\Map\SpyUrlTableMap;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Spryker\Zed\Kernel\Persistence\AbstractQueryContainer;
+use Spryker\Zed\PropelOrm\Business\Model\Formatter\OptimizedSimpleArrayFormatter;
 
 /**
  * @method \Spryker\Zed\ProductStorage\Persistence\ProductStoragePersistenceFactory getFactory()
@@ -243,7 +244,8 @@ class ProductStorageQueryContainer extends AbstractQueryContainer implements Pro
                 ->filterByFkLocale_In($localeIds)
             ->endUse()
             ->filterByFkProductAbstract_In($productAbstractIds)
-            ->filterByIsActive(true);
+            ->filterByIsActive(true)
+            ->setFormatter(new OptimizedSimpleArrayFormatter());
     }
 
     /**
