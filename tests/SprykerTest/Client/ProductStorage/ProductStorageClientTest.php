@@ -306,6 +306,9 @@ class ProductStorageClientTest extends Unit
         // Assert
         $this->assertSame(
             [
+            static::SUPER_ATTRIBUTE_NAME_1 => [
+                static::SUPER_ATTRIBUTE_VALUE_1,
+            ],
             static::SUPER_ATTRIBUTE_NAME_2 => [
                 static::SUPER_ATTRIBUTE_VALUE_2_1,
                 static::SUPER_ATTRIBUTE_VALUE_2_2,
@@ -351,6 +354,9 @@ class ProductStorageClientTest extends Unit
         // Assert
         $this->assertSame(
             [
+                static::NUMERIC_SUPER_ATTRIBUTE_NAME => [
+                    (string)static::NUMERIC_SUPER_ATTRIBUTE_VALUE,
+                ],
                 static::SUPER_ATTRIBUTE_NAME_2 => [
                     static::SUPER_ATTRIBUTE_VALUE_2_1,
                     static::SUPER_ATTRIBUTE_VALUE_2_2,

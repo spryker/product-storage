@@ -53,13 +53,13 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
 
         $attributeVariantMap = $productViewTransfer->getAttributeMap()->getAttributeVariantMap();
 
-        foreach ($attributeVariantMap as $productSuperAttributes) {
-            if (!$this->isSubsetAttributes($selectedAttributes, $productSuperAttributes)) {
-                continue;
-            }
+        $attributeVariantMapCompatibleWithSelection = array_filter($attributeVariantMap, function ($attributeVariantMapOption) use ($selectedAttributes) {
+            return $this->isAttributeCompatibleWithSelection($attributeVariantMapOption, $selectedAttributes);
+        });
 
+        foreach ($attributeVariantMapCompatibleWithSelection as $attributeVariantMapOption) {
             $availableAttributes = $this->filterAvailableAttributes(
-                $productSuperAttributes,
+                $attributeVariantMapOption,
                 $selectedAttributes,
                 $availableAttributes,
             );
@@ -79,6 +79,10 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
     protected function findAvailableAttributes(array $selectedNode, array $filteredAttributes = [])
     {
         foreach (array_keys($selectedNode) as $attributePath) {
+            if (!str_contains($attributePath, static::ATTRIBUTE_MAP_PATH_DELIMITER)) {
+                continue;
+            }
+
             [$attributeKey, $attributeValue] = explode(static::ATTRIBUTE_MAP_PATH_DELIMITER, $attributePath);
             $filteredAttributes[$attributeKey][] = $attributeValue;
         }
@@ -86,14 +90,29 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return $filteredAttributes;
     }
 
+    /**
+     * @param array<string, mixed> $attributeVariantMapOption
+     * @param array<string, mixed> $selectedAttributes
+     * @param array<string, list<string>> $availableAttributes
+     *
+     * @return array<string, list<string>>
+     */
     protected function filterAvailableAttributes(
-        array $superAttributes,
+        array $attributeVariantMapOption,
         array $selectedAttributes,
         array $availableAttributes
     ): array {
-        $attributesToAdd = array_diff_assoc($superAttributes, $selectedAttributes);
+        $unselectedAttributes = array_diff_key($attributeVariantMapOption, $selectedAttributes);
 
-        foreach ($attributesToAdd as $attributeKey => $attributeValue) {
+        $selectedAttributesNotMatchingWithAttributeVariantMapOption = array_diff_assoc($selectedAttributes, $attributeVariantMapOption);
+
+        foreach ($attributeVariantMapOption as $attributeKey => $attributeValue) {
+            $attributeValue = (string)$attributeValue;
+
+            if ($selectedAttributesNotMatchingWithAttributeVariantMapOption && array_key_exists($attributeKey, $unselectedAttributes)) {
+                continue;
+            }
+
             if ($this->hasAttributeWithValue($availableAttributes, $attributeKey, $attributeValue)) {
                 continue;
             }
@@ -104,23 +123,20 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
         return $availableAttributes;
     }
 
-    protected function isSubsetAttributes(array $selectedAttributes, array $productSuperAttributes): bool
+    /**
+     * A variant is compatible when it differs from the selection in at most one attribute, no matter
+     * how many attributes are selected: that attribute is the one the shopper would have to switch to
+     * reach this variant. Differing in nothing means the variant matches the selection entirely, while
+     * differing in more than one attribute puts it out of reach of a single switch.
+     *
+     * @param array<string, mixed> $attributeVariantMapOption
+     * @param array<string, mixed> $selectedAttributes
+     */
+    protected function isAttributeCompatibleWithSelection(array $attributeVariantMapOption, array $selectedAttributes): bool
     {
-        foreach ($selectedAttributes as $superAttributeKey => $superAttributeValue) {
-            if (!$this->includeSameAttribute($productSuperAttributes, $superAttributeKey, $superAttributeValue)) {
-                return false;
-            }
-        }
+        $notMatchingWithSelectedAttributes = array_diff_assoc($selectedAttributes, $attributeVariantMapOption);
 
-        return true;
-    }
-
-    protected function includeSameAttribute(
-        array $superAttributeHaystack,
-        string $superAttributeKey,
-        string $superAttributeValue
-    ): bool {
-        return isset($superAttributeHaystack[$superAttributeKey]) && (string)$superAttributeHaystack[$superAttributeKey] === $superAttributeValue;
+        return count($notMatchingWithSelectedAttributes) <= 1;
     }
 
     protected function hasAttributeWithValue(array $availableAttributes, string $attributeKey, string $attributeValue): bool

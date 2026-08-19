@@ -78,9 +78,7 @@ class ProductVariantExpander implements ProductVariantExpanderInterface
             $productViewTransfer = $this->getSelectedProductVariant($productViewTransfer, $localeName, $selectedVariantNode);
         }
 
-        if (!$productViewTransfer->getIdProductConcrete()) {
-            $productViewTransfer = $this->setAvailableAttributes($selectedVariantNode, $productViewTransfer);
-        }
+        $productViewTransfer = $this->setAvailableAttributes($selectedVariantNode, $productViewTransfer);
 
         return $productViewTransfer;
     }
