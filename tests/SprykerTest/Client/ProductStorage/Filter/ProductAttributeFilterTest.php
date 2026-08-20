@@ -31,6 +31,8 @@ class ProductAttributeFilterTest extends Unit
 
     protected const string ATTRIBUTE_KEY_MATERIAL = 'material';
 
+    protected const string ATTRIBUTE_KEY_PACKAGING_UNIT = 'packaging_unit';
+
     /**
      * Product variants: red/s and blue/m. Neither red/m nor blue/s exists.
      *
@@ -243,6 +245,34 @@ class ProductAttributeFilterTest extends Unit
 
         // Assert
         $this->assertAvailableAttributes([static::ATTRIBUTE_KEY_SIZE => ['s', 'm']], $availableAttributes);
+    }
+
+    /**
+     * Super attributes with a single value across all variants are filtered out of the attribute variant
+     * map, while `ProductVariantExpander` still selects them automatically. They must not be treated as a
+     * difference, otherwise every variant looks further away from the selection than it is.
+     *
+     * @return void
+     */
+    public function testFilterAvailableProductAttributesIgnoresSelectedAttributesMissingFromAttributeVariantMap(): void
+    {
+        // Arrange
+        $attributeVariantMap = [
+            1 => [static::ATTRIBUTE_KEY_PACKAGING_UNIT => 'box'],
+            2 => [static::ATTRIBUTE_KEY_PACKAGING_UNIT => 'item'],
+        ];
+        $productViewTransfer = $this->createProductViewTransfer($attributeVariantMap, [
+            static::ATTRIBUTE_KEY_MATERIAL => 'aluminium',
+            static::ATTRIBUTE_KEY_PACKAGING_UNIT => 'box',
+        ]);
+
+        // Act
+        $availableAttributes = $this->createProductAttributeFilter()->filterAvailableProductAttributes([], $productViewTransfer);
+
+        // Assert
+        $this->assertAvailableAttributes([
+            static::ATTRIBUTE_KEY_PACKAGING_UNIT => ['box', 'item'],
+        ], $availableAttributes);
     }
 
     /**

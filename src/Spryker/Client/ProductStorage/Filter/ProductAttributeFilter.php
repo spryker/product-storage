@@ -104,7 +104,10 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
     ): array {
         $unselectedAttributes = array_diff_key($attributeVariantMapOption, $selectedAttributes);
 
-        $selectedAttributesNotMatchingWithAttributeVariantMapOption = array_diff_assoc($selectedAttributes, $attributeVariantMapOption);
+        $selectedAttributesNotMatchingWithAttributeVariantMapOption = $this->getSelectedAttributesNotMatchingWithAttributeVariantMapOption(
+            $attributeVariantMapOption,
+            $selectedAttributes,
+        );
 
         foreach ($attributeVariantMapOption as $attributeKey => $attributeValue) {
             $attributeValue = (string)$attributeValue;
@@ -134,9 +137,31 @@ class ProductAttributeFilter implements ProductAttributeFilterInterface
      */
     protected function isAttributeCompatibleWithSelection(array $attributeVariantMapOption, array $selectedAttributes): bool
     {
-        $notMatchingWithSelectedAttributes = array_diff_assoc($selectedAttributes, $attributeVariantMapOption);
+        $notMatchingWithSelectedAttributes = $this->getSelectedAttributesNotMatchingWithAttributeVariantMapOption(
+            $attributeVariantMapOption,
+            $selectedAttributes,
+        );
 
         return count($notMatchingWithSelectedAttributes) <= 1;
+    }
+
+    /**
+     * Super attributes with a single value across all product variants are filtered out of the attribute
+     * variant map, while they are still selected automatically for the product view. Such an attribute
+     * cannot tell two variants apart, so only the attributes the variant map option carries are compared.
+     *
+     * @param array<string, mixed> $attributeVariantMapOption
+     * @param array<string, mixed> $selectedAttributes
+     *
+     * @return array<string, mixed>
+     */
+    protected function getSelectedAttributesNotMatchingWithAttributeVariantMapOption(
+        array $attributeVariantMapOption,
+        array $selectedAttributes
+    ): array {
+        $comparableSelectedAttributes = array_intersect_key($selectedAttributes, $attributeVariantMapOption);
+
+        return array_diff_assoc($comparableSelectedAttributes, $attributeVariantMapOption);
     }
 
     protected function hasAttributeWithValue(array $availableAttributes, string $attributeKey, string $attributeValue): bool
