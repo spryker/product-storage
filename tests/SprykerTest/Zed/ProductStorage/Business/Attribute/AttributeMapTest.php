@@ -342,7 +342,6 @@ class AttributeMapTest extends Unit
     protected function resetSuperAttributesCache(): void
     {
         $reflection = new ReflectionProperty(AttributeMap::class, 'superAttributesCache');
-        $reflection->setAccessible(true);
         $reflection->setValue(null, null);
     }
 }

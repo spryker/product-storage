@@ -521,7 +521,6 @@ class ProductStorageClientTest extends Unit
     protected function resetProductConcreteStorageReaderCache(): void
     {
         $reflection = new ReflectionProperty(ProductConcreteStorageReader::class, 'productsConcreteDataCache');
-        $reflection->setAccessible(true);
         $reflection->setValue(null, []);
     }
 

@@ -175,7 +175,6 @@ class ProductStorageFacadeTest extends Unit
     protected function resetAttributeMapSuperAttributesCache(): void
     {
         $reflection = new ReflectionProperty(AttributeMap::class, 'superAttributesCache');
-        $reflection->setAccessible(true);
         $reflection->setValue(null, null);
     }
 
