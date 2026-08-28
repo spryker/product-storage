@@ -16,6 +16,7 @@ use Generated\Shared\Transfer\ProductAbstractStorageTransfer;
 use Generated\Shared\Transfer\ProductConcreteStorageTransfer;
 use Generated\Shared\Transfer\ProductViewTransfer;
 use ReflectionProperty;
+use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToLocaleInterface;
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStorageClientInterface;
 use Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilSanitizeServiceInterface;
 use Spryker\Client\ProductStorage\Filter\ProductAttributeFilter;
@@ -23,6 +24,7 @@ use Spryker\Client\ProductStorage\Filter\ProductAttributeFilterInterface;
 use Spryker\Client\ProductStorage\Mapper\ProductVariantExpander;
 use Spryker\Client\ProductStorage\ProductStorageDependencyProvider;
 use Spryker\Client\ProductStorage\ProductStorageFactory;
+use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReaderInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -427,6 +429,33 @@ class ProductStorageClientTest extends Unit
         $this->assertProductViewTransfersOrder($secondProductConcreteIds, $secondProductViewTransfers, ProductStorageClientTester::PRODUCT_CONCRETE_RESOURCE_NAME);
     }
 
+    public function testMapProductStorageDataResolvesSelectedAttributesGivenInAnotherLocale(): void
+    {
+        // Arrange
+        $this->resetProductAbstractStorageReaderCache();
+        $this->getLocaleClientMock();
+        $this->getStorageClientMock()
+            ->method('getMulti')
+            ->willReturnCallback(function (array $storageKeys): array {
+                $productStorageDataByStorageKey = [];
+                foreach ($storageKeys as $storageKey) {
+                    $productStorageDataByStorageKey[$storageKey] = json_encode($this->getProductStorageDataWithLocalizedSuperAttributes('en_US'));
+                }
+
+                return $productStorageDataByStorageKey;
+            });
+
+        // Act
+        $productViewTransfer = $this->tester->getProductStorageClient()->mapProductStorageData(
+            $this->getProductStorageDataWithLocalizedSuperAttributes('de_DE'),
+            'de_DE',
+            ['color' => 'Black'],
+        );
+
+        // Assert
+        $this->assertSame(['color' => 'Schwarz'], $productViewTransfer->getSelectedAttributes());
+    }
+
     public function testGenerateProductAttributesResetUrlQueryParametersShouldGenerateParametersAccordingToProvidedRequestQueryData(): void
     {
         // Arrange
@@ -522,6 +551,55 @@ class ProductStorageClientTest extends Unit
     {
         $reflection = new ReflectionProperty(ProductConcreteStorageReader::class, 'productsConcreteDataCache');
         $reflection->setValue(null, []);
+    }
+
+    protected function resetProductAbstractStorageReaderCache(): void
+    {
+        $reflection = new ReflectionProperty(ProductAbstractStorageReader::class, 'productsAbstractDataCache');
+        $reflection->setAccessible(true);
+        $reflection->setValue(null, []);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getProductStorageDataWithLocalizedSuperAttributes(string $localeName): array
+    {
+        $colorValuesByLocaleName = [
+            'en_US' => ['Black', 'White'],
+            'de_DE' => ['Schwarz', 'Weiß'],
+        ];
+        $colorValues = $colorValuesByLocaleName[$localeName];
+
+        return [
+            'id_product_abstract' => static::ID_PRODUCT,
+            'attribute_map' => [
+                'super_attributes' => [
+                    'color' => $colorValues,
+                ],
+                'attribute_variant_map' => [
+                    static::PRODUCT_CONCRETE_ID_1 => ['color' => $colorValues[0]],
+                    static::PRODUCT_CONCRETE_ID_2 => ['color' => $colorValues[1]],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return \PHPUnit\Framework\MockObject\MockObject|\Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToLocaleInterface
+     */
+    protected function getLocaleClientMock(): ProductStorageToLocaleInterface
+    {
+        $localeClientMock = $this->getMockBuilder(ProductStorageToLocaleInterface::class)->getMock();
+        $localeClientMock->method('getCurrentLocale')->willReturn('de_DE');
+        $localeClientMock->method('getLocales')->willReturn(['en' => 'en_US', 'de' => 'de_DE']);
+        $this->tester->setDependency(
+            ProductStorageDependencyProvider::CLIENT_LOCALE,
+            $localeClientMock,
+            ProductStorageFactory::class,
+        );
+
+        return $localeClientMock;
     }
 
     /**

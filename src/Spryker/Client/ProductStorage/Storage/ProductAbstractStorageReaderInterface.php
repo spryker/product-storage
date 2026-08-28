@@ -56,6 +56,13 @@ interface ProductAbstractStorageReaderInterface
     public function getBulkProductAbstractStorageDataByProductAbstractIdsAndLocaleName(array $productAbstractIds, string $localeName): array;
 
     /**
+     * @param list<string> $localeNames
+     *
+     * @return array<string, array<string, mixed>> Product abstract storage data indexed by locale name; locales without data are omitted.
+     */
+    public function getBulkProductAbstractStorageDataByProductAbstractIdAndLocaleNames(int $idProductAbstract, array $localeNames): array;
+
+    /**
      * @param string $mappingType
      * @param array<string> $identifiers
      * @param string $localeName

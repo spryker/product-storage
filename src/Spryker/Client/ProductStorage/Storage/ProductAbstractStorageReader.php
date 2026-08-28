@@ -511,6 +511,158 @@ class ProductAbstractStorageReader implements ProductAbstractStorageReaderInterf
     }
 
     /**
+     * @param list<string> $localeNames
+     *
+     * @return array<string, array<string, mixed>> Product abstract storage data indexed by locale name; locales without data are omitted.
+     */
+    public function getBulkProductAbstractStorageDataByProductAbstractIdAndLocaleNames(int $idProductAbstract, array $localeNames): array
+    {
+        if (!$localeNames || $this->isProductAbstractRestricted($idProductAbstract)) {
+            return [];
+        }
+
+        if (ProductStorageConfig::isCollectorCompatibilityMode()) {
+            return $this->getProductAbstractStorageDataIndexedByLocaleName($idProductAbstract, $localeNames);
+        }
+
+        $storeName = $this->getStoreName();
+        $productAbstractStorageDataByLocaleName = [];
+        $localeNamesToFetch = [];
+
+        foreach ($localeNames as $localeName) {
+            if (!$this->hasProductAbstractDataCacheByIdProductAbstractForLocaleNameAndStore($idProductAbstract, $localeName, $storeName)) {
+                $localeNamesToFetch[] = $localeName;
+
+                continue;
+            }
+
+            $productAbstractStorageDataByLocaleName[$localeName] = $this->getProductAbstractDataCacheByIdProductAbstractForLocaleNameAndStore($idProductAbstract, $localeName, $storeName);
+        }
+
+        if (!$localeNamesToFetch) {
+            return array_filter($productAbstractStorageDataByLocaleName);
+        }
+
+        $fetchedProductAbstractStorageDataByLocaleName = $this->fetchBulkProductAbstractStorageDataByLocaleNames($idProductAbstract, $localeNamesToFetch, $storeName);
+
+        foreach ($fetchedProductAbstractStorageDataByLocaleName as $localeName => $productStorageData) {
+            $this->cacheProductAbstractDataByIdProductAbstractForLocaleNameAndStore(
+                $idProductAbstract,
+                $localeName,
+                $storeName,
+                $productStorageData,
+            );
+        }
+
+        return array_filter($productAbstractStorageDataByLocaleName + $fetchedProductAbstractStorageDataByLocaleName);
+    }
+
+    /**
+     * @param list<string> $localeNames
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getProductAbstractStorageDataIndexedByLocaleName(int $idProductAbstract, array $localeNames): array
+    {
+        $productAbstractStorageDataByLocaleName = [];
+        foreach ($localeNames as $localeName) {
+            $productAbstractStorageDataByLocaleName[$localeName] = $this->findProductAbstractStorageData($idProductAbstract, $localeName);
+        }
+
+        return array_filter($productAbstractStorageDataByLocaleName);
+    }
+
+    /**
+     * @param list<string> $localeNames
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function fetchBulkProductAbstractStorageDataByLocaleNames(int $idProductAbstract, array $localeNames, string $storeName): array
+    {
+        $productAbstractStorageDataByLocaleName = $this->getBulkProductAbstractStorageDataByStorageKeys(
+            $this->generateStorageKeysByLocaleName($idProductAbstract, $localeNames, $storeName),
+        );
+
+        if (!$this->isUnifiedStorageEnabled) {
+            return $productAbstractStorageDataByLocaleName;
+        }
+
+        $missingLocaleNames = array_values(array_diff($localeNames, array_keys($productAbstractStorageDataByLocaleName)));
+
+        if (!$missingLocaleNames) {
+            return $productAbstractStorageDataByLocaleName;
+        }
+
+        return $productAbstractStorageDataByLocaleName + $this->getBulkProductAbstractStorageDataForCurrentStoreFallback($idProductAbstract, $missingLocaleNames);
+    }
+
+    /**
+     * With unified storage enabled, the primary read uses the unified store key. Products published
+     * before the unified storage migration still live under the real store key only, so locales missing
+     * from the primary read are re-read with the current store name.
+     *
+     * @param list<string> $localeNames
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getBulkProductAbstractStorageDataForCurrentStoreFallback(int $idProductAbstract, array $localeNames): array
+    {
+        return $this->getBulkProductAbstractStorageDataByStorageKeys(
+            $this->generateStorageKeysByLocaleName($idProductAbstract, $localeNames, $this->getCurrentStoreName()),
+        );
+    }
+
+    /**
+     * @param list<string> $localeNames
+     *
+     * @return array<string, string> Storage keys indexed by locale name.
+     */
+    protected function generateStorageKeysByLocaleName(int $idProductAbstract, array $localeNames, string $storeName): array
+    {
+        $storageKeysByLocaleName = [];
+        foreach ($localeNames as $localeName) {
+            $storageKeysByLocaleName[$localeName] = $this->getStorageKey((string)$idProductAbstract, $localeName, $storeName);
+        }
+
+        return $storageKeysByLocaleName;
+    }
+
+    /**
+     * @param array<string, string> $storageKeysByLocaleName
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getBulkProductAbstractStorageDataByStorageKeys(array $storageKeysByLocaleName): array
+    {
+        $localeNamesByStorageKey = [];
+        foreach ($storageKeysByLocaleName as $localeName => $storageKey) {
+            $localeNamesByStorageKey[$storageKey] = $localeName;
+            $localeNamesByStorageKey[static::KV_PREFIX . $storageKey] = $localeName;
+        }
+
+        $productStorageDataCollection = array_filter($this->storageClient->getMulti($storageKeysByLocaleName));
+
+        $productAbstractStorageDataByLocaleName = [];
+        foreach ($productStorageDataCollection as $storageKey => $productStorageData) {
+            $localeName = $localeNamesByStorageKey[$storageKey] ?? null;
+            $productStorageData = is_string($productStorageData) ? json_decode($productStorageData, true) : $productStorageData;
+
+            if ($localeName === null || !is_array($productStorageData)) {
+                continue;
+            }
+
+            if ($this->isUnifiedStorageEnabled && !$this->isProductInCurrentStore($productStorageData)) {
+                continue;
+            }
+
+            $productAbstractStorageDataByLocaleName[$localeName] = $this->productAbstractVariantsRestrictionFilter
+                ->filterAbstractProductVariantsData($productStorageData);
+        }
+
+        return $productAbstractStorageDataByLocaleName;
+    }
+
+    /**
      * @param array<int> $productAbstractIds
      * @param string $localeName
      * @param string $storeName

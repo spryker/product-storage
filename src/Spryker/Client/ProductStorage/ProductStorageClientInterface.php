@@ -164,6 +164,7 @@ interface ProductStorageClientInterface
      * - Executes a stack of Spryker\Client\ProductStorage\Dependency\Plugin\StorageProductExpanderPluginInterface plugins that
      * can expand the result with extra data.
      * - Filter the restricted product variants (product concrete) in `attribute_map`.
+     * - Resolves selected super attribute values given in another locale to their current-locale equivalents; unresolvable values stay unchanged.
      *
      * @api
      *

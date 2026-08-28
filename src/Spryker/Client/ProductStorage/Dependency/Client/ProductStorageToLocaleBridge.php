@@ -29,4 +29,12 @@ class ProductStorageToLocaleBridge implements ProductStorageToLocaleInterface
     {
         return $this->localeClient->getCurrentLocale();
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getLocales(): array
+    {
+        return $this->localeClient->getLocales();
+    }
 }

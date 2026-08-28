@@ -162,6 +162,10 @@ class ProductStorageClient extends AbstractClient implements ProductStorageClien
         array $selectedAttributes = [],
         ?ProductStorageCriteriaTransfer $productStorageCriteriaTransfer = null
     ) {
+        $selectedAttributes = $this->getFactory()
+            ->createSelectedProductAttributesResolver()
+            ->resolveSelectedProductAttributes($data, $selectedAttributes, $localeName);
+
         return $this->getFactory()
             ->createProductStorageDataMapper()
             ->mapProductStorageData($localeName, $data, $selectedAttributes, $productStorageCriteriaTransfer);

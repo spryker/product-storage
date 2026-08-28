@@ -13,4 +13,9 @@ interface ProductStorageToLocaleInterface
      * @return string
      */
     public function getCurrentLocale();
+
+    /**
+     * @return array<string, string>
+     */
+    public function getLocales(): array;
 }

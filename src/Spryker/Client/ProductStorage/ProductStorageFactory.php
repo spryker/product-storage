@@ -30,6 +30,8 @@ use Spryker\Client\ProductStorage\Mapper\ProductStorageToProductConcreteTransfer
 use Spryker\Client\ProductStorage\Mapper\ProductVariantExpander;
 use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcher;
 use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcherInterface;
+use Spryker\Client\ProductStorage\Resolver\SelectedProductAttributesResolver;
+use Spryker\Client\ProductStorage\Resolver\SelectedProductAttributesResolverInterface;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductStorageMultiReader;
@@ -156,6 +158,14 @@ class ProductStorageFactory extends AbstractFactory
         return new ProductVariantExpander(
             $this->createProductConcreteStorageReader(),
             $this->createProductAttributeFilter(),
+        );
+    }
+
+    public function createSelectedProductAttributesResolver(): SelectedProductAttributesResolverInterface
+    {
+        return new SelectedProductAttributesResolver(
+            $this->createProductAbstractStorageReader(),
+            $this->getLocaleClient(),
         );
     }
 
