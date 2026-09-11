@@ -155,8 +155,9 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
     {
         $cachedProductAbstractData = [];
         foreach ($productIds as $idProduct) {
-            if ($this->hasProductViewTransferCache($idProduct, $localeName, $selectedAttributes)) {
-                $cachedProductAbstractData[$idProduct] = $this->getProductViewTransferFromCache($idProduct, $localeName, $selectedAttributes);
+            $productSelectedAttributes = $this->getProductSelectedAttributesByProductId($idProduct, $selectedAttributes);
+            if ($this->hasProductViewTransferCache($idProduct, $localeName, $productSelectedAttributes)) {
+                $cachedProductAbstractData[$idProduct] = $this->getProductViewTransferFromCache($idProduct, $localeName, $productSelectedAttributes);
             }
         }
 
@@ -171,7 +172,18 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
      */
     protected function getProductSelectedAttributes(array $productData, array $selectedAttributes): array
     {
-        return $selectedAttributes[$this->getProductDataProductId($productData)] ?? [];
+        return $this->getProductSelectedAttributesByProductId($this->getProductDataProductId($productData), $selectedAttributes);
+    }
+
+    /**
+     * @param int $idProduct
+     * @param array<int|string, mixed> $selectedAttributes
+     *
+     * @return array<string, mixed>
+     */
+    protected function getProductSelectedAttributesByProductId(int $idProduct, array $selectedAttributes): array
+    {
+        return $selectedAttributes[$idProduct] ?? [];
     }
 
     protected function cacheProductViewTransfer(ProductViewTransfer $productViewTransfer, string $localeName, array $selectedAttributes = []): void
