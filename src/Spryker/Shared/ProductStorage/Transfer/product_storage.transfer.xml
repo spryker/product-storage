@@ -52,6 +52,7 @@
         <property name="availableAttributes" type="array" singular="availableAttribute"/>
         <property name="selectedAttributes" type="array" singular="selectedAttribute"/>
         <property name="superAttributesDefinition" type="array" singular="superAttributesDefinition"/>
+        <property name="images" singular="image" type="ProductImageStorage[]"/>
     </transfer>
 
     <transfer name="UrlStorage">
@@ -133,9 +134,18 @@
     </transfer>
 
     <transfer name="ProductConcreteCriteriaFilter">
+        <property name="searchString" type="string"/>
     </transfer>
 
     <transfer name="ProductConcretePageSearch">
+        <property name="fkProduct" type="int"/>
+        <property name="fkProductAbstract" type="int"/>
+        <property name="sku" type="string"/>
+        <property name="name" type="string"/>
+        <property name="images" type="array" singular="image"/>
+    </transfer>
+
+    <transfer name="ProductImageStorage">
     </transfer>
 
 </transfers>
