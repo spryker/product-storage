@@ -39,6 +39,7 @@ suites:
                 - \SprykerTest\Shared\Store\Helper\StoreDependencyHelper
                 - \SprykerTest\Shared\Testify\Helper\TableRelationsCleanupHelper
                 - \SprykerTest\Client\Queue\Helper\QueueHelper
+                - \SprykerTest\Zed\Synchronization\Helper\SynchronizationDataExportHelper
     Business:
         path: Business
         actor: ProductStorageBusinessTester
