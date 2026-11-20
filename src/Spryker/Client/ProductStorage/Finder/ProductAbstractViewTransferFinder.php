@@ -9,6 +9,7 @@ namespace Spryker\Client\ProductStorage\Finder;
 
 use Generated\Shared\Transfer\ProductViewTransfer;
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStoreClientInterface;
+use Spryker\Client\ProductStorage\Expander\ProductViewProductAbstractExpanderInterface;
 use Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapperInterface;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReaderInterface;
 
@@ -37,9 +38,10 @@ class ProductAbstractViewTransferFinder extends AbstractProductViewTransferFinde
     public function __construct(
         ProductAbstractStorageReaderInterface $productAbstractStorage,
         ProductStorageDataMapperInterface $productStorageDataMapper,
-        ProductStorageToStoreClientInterface $storeClient
+        ProductStorageToStoreClientInterface $storeClient,
+        ProductViewProductAbstractExpanderInterface $productViewProductAbstractExpander
     ) {
-        parent::__construct($productStorageDataMapper);
+        parent::__construct($productStorageDataMapper, $productViewProductAbstractExpander);
         $this->productAbstractStorageReader = $productAbstractStorage;
         $this->storeClient = $storeClient;
     }

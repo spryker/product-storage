@@ -21,12 +21,16 @@ use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStorageClien
 use Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilSanitizeServiceInterface;
 use Spryker\Client\ProductStorage\Filter\ProductAttributeFilter;
 use Spryker\Client\ProductStorage\Filter\ProductAttributeFilterInterface;
+use Spryker\Client\ProductStorage\Finder\AbstractProductViewTransferFinder;
+use Spryker\Client\ProductStorage\Finder\ProductAbstractViewTransferFinder;
+use Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapper;
 use Spryker\Client\ProductStorage\Mapper\ProductVariantExpander;
 use Spryker\Client\ProductStorage\ProductStorageDependencyProvider;
 use Spryker\Client\ProductStorage\ProductStorageFactory;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReader;
 use Spryker\Client\ProductStorage\Storage\ProductConcreteStorageReaderInterface;
+use Spryker\Client\ProductStorageExtension\Dependency\Plugin\ProductViewExpanderPluginInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -75,6 +79,8 @@ class ProductStorageClientTest extends Unit
      */
     protected const NUMERIC_SUPER_ATTRIBUTE_VALUE = 100;
 
+    protected const string NUMERIC_SUPER_ATTRIBUTE_KEY = '10';
+
     /**
      * @var int
      */
@@ -116,6 +122,23 @@ class ProductStorageClientTest extends Unit
      * @var string
      */
     protected const REQUEST_PARAM_ATTRIBUTES = 'attributes';
+
+    protected const string PRODUCT_ABSTRACT_NAME = 'Abstract product name';
+
+    protected const string PRODUCT_CONCRETE_NAME = 'Concrete product name';
+
+    protected const string PRODUCT_ABSTRACT_SKU = 'abstract-product-sku';
+
+    protected const string PRODUCT_CONCRETE_SKU = 'concrete-product-sku';
+
+    protected const string KEY_PRODUCT_VIEW_WITHOUT_PRODUCT_ABSTRACT = 'product-view-without-product-abstract';
+
+    /**
+     * @uses \Spryker\Shared\Product\ProductConfig::ATTRIBUTE_KEY_BRAND
+     */
+    protected const string BRAND_ATTRIBUTE_KEY = 'brand';
+
+    protected const string BRAND = 'Samsung';
 
     /**
      * @var \SprykerTest\Client\ProductStorage\ProductStorageClientTester
@@ -456,6 +479,253 @@ class ProductStorageClientTest extends Unit
         $this->assertSame(['color' => 'Schwarz'], $productViewTransfer->getSelectedAttributes());
     }
 
+    public function testMapProductStorageDataKeepsTheAbstractProductNameWhenTheDataOfItsConcreteProductAreMergedIn(): void
+    {
+        // Arrange
+        $this->getStorageClientMock()
+            ->method('get')
+            ->willReturn([
+                ProductViewTransfer::ID_PRODUCT_CONCRETE => static::PRODUCT_CONCRETE_ID_1,
+                ProductViewTransfer::SKU => static::PRODUCT_CONCRETE_SKU,
+                ProductViewTransfer::NAME => static::PRODUCT_CONCRETE_NAME,
+            ]);
+        $productViewTransfer = $this->tester->getProductStorageClient()->mapProductStorageData([
+            ProductViewTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductViewTransfer::SKU => static::PRODUCT_ABSTRACT_SKU,
+            ProductViewTransfer::NAME => static::PRODUCT_ABSTRACT_NAME,
+            ProductViewTransfer::ATTRIBUTE_MAP => [
+                AttributeMapStorageTransfer::PRODUCT_CONCRETE_IDS => [static::PRODUCT_CONCRETE_ID_1],
+            ],
+        ], ProductStorageClientTester::LOCALE_NAME);
+
+        // Act
+        $productViewTransfer = $this->tester->getProductStorageClient()
+            ->expandProductViewWithProductVariant($productViewTransfer, ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame(static::PRODUCT_CONCRETE_NAME, $productViewTransfer->getName());
+        $this->assertSame(static::PRODUCT_ABSTRACT_NAME, $productViewTransfer->getAbstractName());
+    }
+
+    public function testMapProductStorageDataSetsTheSelectedVariantAttributesOfTheSelectedConcreteProductFromTheSuperAttributesOfItsAbstractProduct(): void
+    {
+        // Arrange
+        $productStorageData = [
+            'id_product_abstract' => static::ID_PRODUCT_2,
+            'id_product_concrete' => static::PRODUCT_CONCRETE_ID_1,
+            'attributes' => [static::SUPER_ATTRIBUTE_NAME_1 => static::SUPER_ATTRIBUTE_VALUE_1],
+            'attribute_map' => ['super_attributes' => [static::SUPER_ATTRIBUTE_NAME_1 => [static::SUPER_ATTRIBUTE_VALUE_1]]],
+        ];
+
+        // Act
+        $productViewTransfer = $this->tester->getProductStorageClient()
+            ->mapProductStorageData($productStorageData, ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame([static::SUPER_ATTRIBUTE_NAME_1 => static::SUPER_ATTRIBUTE_VALUE_1], $productViewTransfer->getSelectedVariantAttributes());
+    }
+
+    public function testMapProductStorageDataSetsTheBrandFromTheProductAttributes(): void
+    {
+        // Act
+        $productViewTransfer = $this->tester->getProductStorageClient()->mapProductStorageData([
+            ProductViewTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductViewTransfer::ATTRIBUTES => [static::BRAND_ATTRIBUTE_KEY => static::BRAND],
+        ], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame(static::BRAND, $productViewTransfer->getBrand());
+    }
+
+    public function testMapProductAbstractStorageDataSetsTheBrandFromTheProductAttributes(): void
+    {
+        // Act
+        $productViewTransfer = $this->tester->getProductStorageClient()->mapProductAbstractStorageData([
+            ProductViewTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductViewTransfer::ATTRIBUTES => [static::BRAND_ATTRIBUTE_KEY => static::BRAND],
+        ], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame(static::BRAND, $productViewTransfer->getBrand());
+    }
+
+    public function testExpandProductViewTransfersWithProductAbstractSetsTheBrandOfAProductViewBuiltByHand(): void
+    {
+        // Arrange
+        $this->getStorageClientMock()
+            ->expects($this->never())
+            ->method('getMulti');
+        $productViewTransfer = (new ProductViewTransfer())
+            ->setAttributes([static::BRAND_ATTRIBUTE_KEY => static::BRAND]);
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->expandProductViewTransfersWithProductAbstract([$productViewTransfer], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame(static::BRAND, $productViewTransfers[0]->getBrand());
+    }
+
+    public function testExpandProductViewTransfersWithProductAbstractTakesTheBrandOfTheAbstractProductWhenTheProductViewHasNoAttributes(): void
+    {
+        // Arrange
+        $this->resetProductAbstractStorageReaderCache();
+        $productAbstractStorageTransfer = $this->getProductAbstractStorage([
+            ProductAbstractStorageTransfer::ATTRIBUTES => [static::BRAND_ATTRIBUTE_KEY => static::BRAND],
+        ]);
+        $this->getStorageClientMock()->method('getMulti')->willReturn([json_encode($productAbstractStorageTransfer->toArray())]);
+        $productViewTransfer = (new ProductViewTransfer())->setIdProductAbstract($productAbstractStorageTransfer->getIdProductAbstract());
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->expandProductViewTransfersWithProductAbstract([$productViewTransfer], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame(static::BRAND, $productViewTransfers[0]->getBrand());
+    }
+
+    public function testExpandProductViewTransfersWithProductAbstractSetsTheAbstractSkuAndNameAndKeepsTheKeys(): void
+    {
+        // Arrange
+        $this->resetProductAbstractStorageReaderCache();
+        $productAbstractStorageTransfer = $this->getProductAbstractStorage([
+            ProductAbstractStorageTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductAbstractStorageTransfer::SKU => static::PRODUCT_ABSTRACT_SKU,
+            ProductAbstractStorageTransfer::NAME => static::PRODUCT_ABSTRACT_NAME,
+        ]);
+        $this->getStorageClientMock()
+            ->expects($this->once())
+            ->method('getMulti')
+            ->willReturn([json_encode($productAbstractStorageTransfer->toArray())]);
+        $productViewTransfers = [
+            static::PRODUCT_CONCRETE_SKU => $this->tester->createProductViewTransfer([ProductViewTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT]),
+            static::KEY_PRODUCT_VIEW_WITHOUT_PRODUCT_ABSTRACT => new ProductViewTransfer(),
+        ];
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->expandProductViewTransfersWithProductAbstract($productViewTransfers, ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame([static::PRODUCT_CONCRETE_SKU, static::KEY_PRODUCT_VIEW_WITHOUT_PRODUCT_ABSTRACT], array_keys($productViewTransfers));
+        $this->assertSame(static::PRODUCT_ABSTRACT_SKU, $productViewTransfers[static::PRODUCT_CONCRETE_SKU]->getAbstractSku());
+        $this->assertSame(static::PRODUCT_ABSTRACT_NAME, $productViewTransfers[static::PRODUCT_CONCRETE_SKU]->getAbstractName());
+        $this->assertNull($productViewTransfers[static::KEY_PRODUCT_VIEW_WITHOUT_PRODUCT_ABSTRACT]->getAbstractName());
+    }
+
+    public function testExpandProductViewTransfersWithProductAbstractSetsTheSelectedVariantAttributesInTheStringOrderOfTheSuperAttributeKeys(): void
+    {
+        // Arrange
+        $this->resetProductAbstractStorageReaderCache();
+        $this->getStorageClientMock()
+            ->method('getMulti')
+            ->willReturn([json_encode($this->getProductAbstractStorageWithSuperAttributes()->toArray())]);
+        $productViewTransfer = $this->tester->createProductViewTransfer([
+            ProductViewTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductViewTransfer::ID_PRODUCT_CONCRETE => static::PRODUCT_CONCRETE_ID_1,
+            ProductViewTransfer::ATTRIBUTES => $this->getConcreteAttributesWithSuperAttributes(),
+        ]);
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->expandProductViewTransfersWithProductAbstract([$productViewTransfer], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame($this->getExpectedSelectedVariantAttributes(), $productViewTransfers[0]->getSelectedVariantAttributes());
+    }
+
+    public function testExpandProductViewTransfersWithProductAbstractSetsNoSelectedVariantAttributesWhenNoConcreteProductIsSelected(): void
+    {
+        // Arrange
+        $this->resetProductAbstractStorageReaderCache();
+        $this->getStorageClientMock()
+            ->method('getMulti')
+            ->willReturn([json_encode($this->getProductAbstractStorageWithSuperAttributes()->toArray())]);
+        $productViewTransfer = $this->tester->createProductViewTransfer([
+            ProductViewTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductViewTransfer::ATTRIBUTES => $this->getConcreteAttributesWithSuperAttributes(),
+        ]);
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->expandProductViewTransfersWithProductAbstract([$productViewTransfer], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame([], $productViewTransfers[0]->getSelectedVariantAttributes());
+    }
+
+    public function testExpandProductViewTransfersWithProductAbstractDoesNotReadTheStorageWhenNoProductViewHasAnAbstractProduct(): void
+    {
+        // Arrange
+        $this->getStorageClientMock()
+            ->expects($this->never())
+            ->method('getMulti');
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->expandProductViewTransfersWithProductAbstract([new ProductViewTransfer()], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertNull($productViewTransfers[0]->getAbstractSku());
+    }
+
+    public function testGetProductAbstractViewTransfersSetsTheSelectedVariantAttributesOfTheSelectedConcreteProduct(): void
+    {
+        // Arrange
+        $this->resetProductAbstractViewCaches();
+        $this->getStorageClientMock()
+            ->method('getMulti')
+            ->willReturn([json_encode($this->getProductAbstractStorageWithSuperAttributes()->toArray())]);
+        $this->tester->setDependency(
+            ProductStorageDependencyProvider::PLUGIN_PRODUCT_VIEW_EXPANDERS,
+            [$this->createConcreteProductSelectingProductViewExpanderPluginMock()],
+            ProductStorageFactory::class,
+        );
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->getProductAbstractViewTransfers([static::ID_PRODUCT], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame($this->getExpectedSelectedVariantAttributes(), $productViewTransfers[0]->getSelectedVariantAttributes());
+    }
+
+    public function testGetProductAbstractViewTransfersSetsNoSelectedVariantAttributesWithoutConcreteProduct(): void
+    {
+        // Arrange
+        $this->resetProductAbstractViewCaches();
+        $this->getStorageClientMock()
+            ->method('getMulti')
+            ->willReturn([json_encode($this->getProductAbstractStorageWithSuperAttributes()->toArray())]);
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->getProductAbstractViewTransfers([static::ID_PRODUCT], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame([], $productViewTransfers[0]->getSelectedVariantAttributes());
+    }
+
+    public function testGetProductConcreteViewTransfersExpandsTheProductViewsWithTheirAbstractProduct(): void
+    {
+        // Arrange
+        $this->resetProductAbstractViewCaches();
+        $this->resetProductConcreteStorageReaderCache();
+        $this->getStorageClientMock()
+            ->method('getMulti')
+            ->willReturnCallback(function (array $storageKeys): array {
+                return [json_encode($this->getConcreteOrAbstractStorageDataWithNamesByStorageKey($storageKeys[0]))];
+            });
+
+        // Act
+        $productViewTransfers = $this->tester->getProductStorageClient()
+            ->getProductConcreteViewTransfers([static::PRODUCT_CONCRETE_ID_1], ProductStorageClientTester::LOCALE_NAME);
+
+        // Assert
+        $this->assertSame(static::PRODUCT_ABSTRACT_NAME, $productViewTransfers[0]->getAbstractName());
+        $this->assertSame($this->getExpectedSelectedVariantAttributes(), $productViewTransfers[0]->getSelectedVariantAttributes());
+    }
+
     public function testGenerateProductAttributesResetUrlQueryParametersShouldGenerateParametersAccordingToProvidedRequestQueryData(): void
     {
         // Arrange
@@ -551,6 +821,89 @@ class ProductStorageClientTest extends Unit
     {
         $reflection = new ReflectionProperty(ProductConcreteStorageReader::class, 'productsConcreteDataCache');
         $reflection->setValue(null, []);
+    }
+
+    /**
+     * The super attribute keys mix a numeric key, which PHP turns into an integer, with string keys, so their order is the string order.
+     */
+    protected function getProductAbstractStorageWithSuperAttributes(): ProductAbstractStorageTransfer
+    {
+        return $this->getProductAbstractStorage([
+            ProductAbstractStorageTransfer::ID_PRODUCT_ABSTRACT => static::ID_PRODUCT,
+            ProductAbstractStorageTransfer::ATTRIBUTE_MAP => [
+                AttributeMapStorageTransfer::SUPER_ATTRIBUTES => [
+                    static::SUPER_ATTRIBUTE_NAME_2 => [static::SUPER_ATTRIBUTE_VALUE_2_1, static::SUPER_ATTRIBUTE_VALUE_2_2],
+                    static::NUMERIC_SUPER_ATTRIBUTE_KEY => [static::NUMERIC_SUPER_ATTRIBUTE_VALUE],
+                    static::SUPER_ATTRIBUTE_NAME_1 => [static::SUPER_ATTRIBUTE_VALUE_1],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    protected function getConcreteAttributesWithSuperAttributes(): array
+    {
+        return [
+            static::SUPER_ATTRIBUTE_NAME_1 => static::SUPER_ATTRIBUTE_VALUE_1,
+            static::SUPER_ATTRIBUTE_NAME_2 => static::SUPER_ATTRIBUTE_VALUE_2_2,
+            static::NUMERIC_SUPER_ATTRIBUTE_KEY => static::NUMERIC_SUPER_ATTRIBUTE_VALUE,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function getExpectedSelectedVariantAttributes(): array
+    {
+        return [
+            static::NUMERIC_SUPER_ATTRIBUTE_KEY => (string)static::NUMERIC_SUPER_ATTRIBUTE_VALUE,
+            static::SUPER_ATTRIBUTE_NAME_1 => static::SUPER_ATTRIBUTE_VALUE_1,
+            static::SUPER_ATTRIBUTE_NAME_2 => static::SUPER_ATTRIBUTE_VALUE_2_2,
+        ];
+    }
+
+    protected function resetProductAbstractViewCaches(): void
+    {
+        $this->resetProductAbstractStorageReaderCache();
+        (new ReflectionProperty(AbstractProductViewTransferFinder::class, 'productViewTransfersCache'))->setValue(null, []);
+        (new ReflectionProperty(ProductAbstractViewTransferFinder::class, 'productViewTransfersCache'))->setValue(null, []);
+        (new ReflectionProperty(ProductStorageDataMapper::class, 'mappingCache'))->setValue(null, []);
+    }
+
+    protected function createConcreteProductSelectingProductViewExpanderPluginMock(): ProductViewExpanderPluginInterface
+    {
+        $productViewExpanderPluginMock = $this->createMock(ProductViewExpanderPluginInterface::class);
+        $productViewExpanderPluginMock->method('expandProductViewTransfer')
+            ->willReturnCallback(function (ProductViewTransfer $productViewTransfer): ProductViewTransfer {
+                return $productViewTransfer
+                    ->setIdProductConcrete(static::PRODUCT_CONCRETE_ID_1)
+                    ->setAttributes($this->getConcreteAttributesWithSuperAttributes());
+            });
+
+        return $productViewExpanderPluginMock;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getConcreteOrAbstractStorageDataWithNamesByStorageKey(string $storageKey): array
+    {
+        if (str_contains($storageKey, 'product_abstract')) {
+            return $this->getProductAbstractStorageWithSuperAttributes()
+                ->setName(static::PRODUCT_ABSTRACT_NAME)
+                ->setSku(static::PRODUCT_ABSTRACT_SKU)
+                ->toArray();
+        }
+
+        return [
+            'id_product_concrete' => static::PRODUCT_CONCRETE_ID_1,
+            'id_product_abstract' => static::ID_PRODUCT,
+            'name' => static::PRODUCT_CONCRETE_NAME,
+            'sku' => static::PRODUCT_CONCRETE_SKU,
+            'attributes' => $this->getConcreteAttributesWithSuperAttributes(),
+        ];
     }
 
     protected function resetProductAbstractStorageReaderCache(): void

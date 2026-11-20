@@ -16,6 +16,8 @@ use Spryker\Client\Kernel\Locator;
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToLocaleInterface;
 use Spryker\Client\ProductStorage\Filter\ProductAbstractAttributeMapRestrictionFilterInterface;
 use Spryker\Client\ProductStorage\ProductStorageConfig;
+use Spryker\Client\ProductStorage\Resolver\ProductBrandResolverInterface;
+use Spryker\Client\ProductStorage\Resolver\ProductSelectedVariantAttributesResolverInterface;
 use Spryker\Client\ProductStorageExtension\Dependency\Plugin\ProductViewExpanderByCriteriaPluginInterface;
 use Spryker\Client\ProductStorageExtension\Dependency\Plugin\ProductViewExpanderPluginInterface;
 
@@ -41,21 +43,31 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
      */
     protected static array $mappingCache = [];
 
+    protected ProductBrandResolverInterface $productBrandResolver;
+
+    protected ProductSelectedVariantAttributesResolverInterface $productSelectedVariantAttributesResolver;
+
     /**
      * @uses \Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapper::filterProductStorageExpanderPlugins()
      *
      * @param array<\Spryker\Client\ProductStorageExtension\Dependency\Plugin\ProductViewExpanderPluginInterface> $storageProductExpanderPlugins
      * @param \Spryker\Client\ProductStorage\Filter\ProductAbstractAttributeMapRestrictionFilterInterface $productAbstractVariantsRestrictionFilter
      * @param \Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToLocaleInterface $localeClient
+     * @param \Spryker\Client\ProductStorage\Resolver\ProductBrandResolverInterface $productBrandResolver
+     * @param \Spryker\Client\ProductStorage\Resolver\ProductSelectedVariantAttributesResolverInterface $productSelectedVariantAttributesResolver
      */
     public function __construct(
         array $storageProductExpanderPlugins,
         ProductAbstractAttributeMapRestrictionFilterInterface $productAbstractVariantsRestrictionFilter,
-        ProductStorageToLocaleInterface $localeClient
+        ProductStorageToLocaleInterface $localeClient,
+        ProductBrandResolverInterface $productBrandResolver,
+        ProductSelectedVariantAttributesResolverInterface $productSelectedVariantAttributesResolver
     ) {
         $this->productStorageExpanderPlugins = array_filter($storageProductExpanderPlugins, [$this, 'filterProductStorageExpanderPlugins']);
         $this->productAbstractVariantsRestrictionFilter = $productAbstractVariantsRestrictionFilter;
         $this->localeClient = $localeClient;
+        $this->productBrandResolver = $productBrandResolver;
+        $this->productSelectedVariantAttributesResolver = $productSelectedVariantAttributesResolver;
     }
 
     /**
@@ -92,9 +104,30 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
             $productViewTransfer = $productViewExpanderPlugin->expandProductViewTransfer($productViewTransfer, $productStorageData, $locale);
         }
 
+        if ($productViewTransfer->getBrand() === null) {
+            $productViewTransfer->setBrand($this->productBrandResolver->findBrand($productViewTransfer->getAttributes()));
+        }
+
+        $productViewTransfer->setSelectedVariantAttributes($this->resolveSelectedVariantAttributes($productViewTransfer, $productStorageData));
+
         static::$mappingCache[$cacheKey] = $productViewTransfer;
 
         return $productViewTransfer;
+    }
+
+    /**
+     * @param array<string, mixed> $productStorageData
+     *
+     * @return array<string, string>
+     */
+    protected function resolveSelectedVariantAttributes(ProductViewTransfer $productViewTransfer, array $productStorageData): array
+    {
+        // Without a selected concrete product the attributes are the abstract ones, and an abstract value of a super attribute selects no variant.
+        if (!$productViewTransfer->getIdProductConcrete()) {
+            return [];
+        }
+
+        return $this->productSelectedVariantAttributesResolver->resolveSelectedVariantAttributes($productStorageData, $productViewTransfer->getAttributes());
     }
 
     protected function generateCacheKey(
@@ -136,6 +169,7 @@ class ProductStorageDataMapper implements ProductStorageDataMapperInterface
 
         if ($productViewTransfer->getIdProductConcrete() === null) {
             $productViewTransfer->setAbstractSku($productViewTransfer->getSku());
+            $productViewTransfer->setAbstractName($productViewTransfer->getName());
         }
 
         return $productViewTransfer;

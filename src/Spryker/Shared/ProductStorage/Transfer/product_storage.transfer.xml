@@ -38,11 +38,14 @@
 
     <transfer name="ProductView">
         <property name="idProductAbstract" type="int"/>
+        <property name="brand" type="string" description="Brand of the product, the value of its brand attribute; null when it has none."/>
         <property name="idProductConcrete" type="int"/>
         <property name="attributes" type="array" singular="attributes"/>
         <property name="name" type="string"/>
         <property name="sku" type="string"/>
         <property name="abstractSku" type="string"/>
+        <property name="abstractName" type="string" description="The name of the abstract product."/>
+        <property name="selectedVariantAttributes" type="array" singular="selectedVariantAttribute" description="The super attributes of the concrete product the view shows, attribute key to value, ordered by attribute key as strings, e.g. {&quot;color&quot;: &quot;Red&quot;, &quot;storage_capacity&quot;: &quot;64 GB&quot;}; empty without a concrete product."/>
         <property name="url" type="string"/>
         <property name="description" type="string"/>
         <property name="metaTitle" type="string"/>

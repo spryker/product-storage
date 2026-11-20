@@ -9,6 +9,7 @@ namespace Spryker\Client\ProductStorage\Finder;
 
 use Generated\Shared\Transfer\ProductViewTransfer;
 use Spryker\Client\ProductStorage\Exception\ProductViewTransferCacheNotFoundException;
+use Spryker\Client\ProductStorage\Expander\ProductViewProductAbstractExpanderInterface;
 use Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapperInterface;
 use Spryker\Client\ProductStorage\ProductStorageConfig;
 
@@ -29,9 +30,14 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
      */
     protected static $productViewTransfersCache = [];
 
-    public function __construct(ProductStorageDataMapperInterface $productStorageDataMapper)
-    {
+    protected ProductViewProductAbstractExpanderInterface $productViewProductAbstractExpander;
+
+    public function __construct(
+        ProductStorageDataMapperInterface $productStorageDataMapper,
+        ProductViewProductAbstractExpanderInterface $productViewProductAbstractExpander
+    ) {
         $this->productStorageDataMapper = $productStorageDataMapper;
+        $this->productViewProductAbstractExpander = $productViewProductAbstractExpander;
     }
 
     public function findProductViewTransfer(int $idProduct, string $localeName, array $selectedAttributes = []): ?ProductViewTransfer
@@ -69,16 +75,40 @@ abstract class AbstractProductViewTransferFinder implements ProductViewTransferF
 
         $notCachedProductIds = array_diff($productIds, array_keys($cachedProductViewTransfers));
         if (!$notCachedProductIds) {
-            return $this->sortProductViewTransfersByProductIds($cachedProductViewTransfers, $productIds);
+            return $this->expandProductViewTransfersWithoutProductAbstract(
+                $this->sortProductViewTransfersByProductIds($cachedProductViewTransfers, $productIds),
+                $localeName,
+            );
         }
 
         $productStorageDataCollection = $this->getBulkProductStorageData($notCachedProductIds, $localeName);
         $productViewTransfers = $this->mapProductData($productStorageDataCollection, $localeName, $selectedAttributes);
 
-        return $this->sortProductViewTransfersByProductIds(
-            array_merge($cachedProductViewTransfers, $productViewTransfers),
-            $productIds,
+        return $this->expandProductViewTransfersWithoutProductAbstract(
+            $this->sortProductViewTransfersByProductIds(array_merge($cachedProductViewTransfers, $productViewTransfers), $productIds),
+            $localeName,
         );
+    }
+
+    /**
+     * @param array<\Generated\Shared\Transfer\ProductViewTransfer> $productViewTransfers
+     *
+     * @return array<\Generated\Shared\Transfer\ProductViewTransfer>
+     */
+    protected function expandProductViewTransfersWithoutProductAbstract(array $productViewTransfers, string $localeName): array
+    {
+        $productViewTransfersWithoutProductAbstract = array_filter(
+            $productViewTransfers,
+            static fn (ProductViewTransfer $productViewTransfer): bool => $productViewTransfer->getAbstractName() === null,
+        );
+
+        if (!$productViewTransfersWithoutProductAbstract) {
+            return $productViewTransfers;
+        }
+
+        $this->productViewProductAbstractExpander->expandProductViewTransfersWithProductAbstract($productViewTransfersWithoutProductAbstract, $localeName);
+
+        return $productViewTransfers;
     }
 
     /**

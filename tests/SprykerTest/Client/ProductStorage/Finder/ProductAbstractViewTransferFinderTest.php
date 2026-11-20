@@ -12,6 +12,7 @@ use Generated\Shared\Transfer\ProductViewTransfer;
 use Generated\Shared\Transfer\StoreTransfer;
 use ReflectionProperty;
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStoreClientInterface;
+use Spryker\Client\ProductStorage\Expander\ProductViewProductAbstractExpanderInterface;
 use Spryker\Client\ProductStorage\Finder\ProductAbstractViewTransferFinder;
 use Spryker\Client\ProductStorage\Mapper\ProductStorageDataMapperInterface;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReaderInterface;
@@ -126,6 +127,11 @@ class ProductAbstractViewTransferFinderTest extends Unit
                     ->setIdProductAbstract($productStorageData[static::KEY_ID_PRODUCT_ABSTRACT]);
             });
 
+        $productViewProductAbstractExpanderMock = $this->createMock(ProductViewProductAbstractExpanderInterface::class);
+        $productViewProductAbstractExpanderMock
+            ->method('expandProductViewTransfersWithProductAbstract')
+            ->willReturnArgument(0);
+
         $storeClientMock = $this->createMock(ProductStorageToStoreClientInterface::class);
         $storeClientMock
             ->method('getCurrentStore')
@@ -135,6 +141,7 @@ class ProductAbstractViewTransferFinderTest extends Unit
             $productAbstractStorageReaderMock,
             $productStorageDataMapperMock,
             $storeClientMock,
+            $productViewProductAbstractExpanderMock,
         );
     }
 }

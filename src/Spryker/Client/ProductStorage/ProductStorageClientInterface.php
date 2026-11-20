@@ -165,6 +165,8 @@ interface ProductStorageClientInterface
      * can expand the result with extra data.
      * - Filter the restricted product variants (product concrete) in `attribute_map`.
      * - Resolves selected super attribute values given in another locale to their current-locale equivalents; unresolvable values stay unchanged.
+     * - Sets `ProductViewTransfer.brand`, after the product view expander plugins, to the value of the `brand` attribute in `ProductViewTransfer.attributes`; null when it is missing, non-scalar or empty.
+     * - Sets `ProductViewTransfer.selectedVariantAttributes`, after the product view expander plugins, of a product view with `idProductConcrete`: the values of `ProductViewTransfer.attributes` for the super attributes in the given data's attribute map, attribute key to value, ordered by attribute key as strings; empty without `idProductConcrete` or without an attribute map.
      *
      * @api
      *
@@ -291,6 +293,7 @@ interface ProductStorageClientInterface
      * - Maps raw product data to ProductViewTransfers for the current locale.
      * - Executes a stack of `StorageProductExpanderPluginInterface` plugins that expand result.
      * - Sorts collection of `ProductViewTransfers` according to the order of IDs in `$productAbstractIds`.
+     * - Expands the product views with their abstract product, see {@link expandProductViewTransfersWithProductAbstract()}.
      *
      * @api
      *
@@ -309,6 +312,7 @@ interface ProductStorageClientInterface
      * - Maps raw product data to ProductViewTransfers for the current locale.
      * - Executes a stack of `StorageProductExpanderPluginInterface` plugins that expand result.
      * - Sorts collection of `ProductViewTransfers` according to the order of IDs in `$productConcreteIds`.
+     * - Expands the product views with their abstract product, see {@link expandProductViewTransfersWithProductAbstract()}.
      *
      * @api
      *
@@ -467,4 +471,24 @@ interface ProductStorageClientInterface
      * @return array<string, string|null>
      */
     public function getRawProductCollection(array $keys): array;
+
+    /**
+     * Specification:
+     * - Reads the abstract product storage data of all given product views with one storage request, for the given locale and the current store.
+     * - Keeps a `ProductViewTransfer.brand` that is already set; otherwise sets it to the value of the `brand` attribute in `ProductViewTransfer.attributes`; null when it is missing, non-scalar or empty.
+     * - Takes the brand from the attributes of the abstract product in storage when `ProductViewTransfer.attributes` has none, e.g. for a product view built from a search result.
+     * - Sets `ProductViewTransfer.abstractSku` and `ProductViewTransfer.abstractName` from that data.
+     * - Sets `ProductViewTransfer.selectedVariantAttributes` of a product view with `idProductConcrete`: the values of `ProductViewTransfer.attributes` for the super attributes of the abstract product, attribute key to value, ordered by attribute key as strings, e.g. {"color": "Red", "storage_capacity": "64 GB"}; empty values are left out.
+     * - Sets an empty `ProductViewTransfer.selectedVariantAttributes` for a product view without `idProductConcrete`, as no variant is selected.
+     * - Leaves a product view without `idProductAbstract`, or whose abstract product is not in storage, unchanged.
+     * - Keeps the keys of the given array.
+     *
+     * @api
+     *
+     * @param array<\Generated\Shared\Transfer\ProductViewTransfer> $productViewTransfers
+     * @param string $localeName
+     *
+     * @return array<\Generated\Shared\Transfer\ProductViewTransfer>
+     */
+    public function expandProductViewTransfersWithProductAbstract(array $productViewTransfers, string $localeName): array;
 }

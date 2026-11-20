@@ -14,6 +14,8 @@ use Spryker\Client\Kernel\AbstractBundleConfig;
  */
 class ProductStorageConfig extends AbstractBundleConfig
 {
+    protected const string BRAND_ATTRIBUTE_KEY = 'brand';
+
     /**
      * @api
      *
@@ -82,5 +84,18 @@ class ProductStorageConfig extends AbstractBundleConfig
     public function isProductAbstractStorageUnifiedFallbackEnabled(): bool
     {
         return true;
+    }
+
+    /**
+     * Specification:
+     * - Returns the key of the product attribute that holds the brand of a product, read from the product storage data.
+     * - The cart reads the brand by `\Spryker\Zed\ProductCartConnector\ProductCartConnectorConfig::getBrandAttributeKey()`:
+     *   a project that changes the key changes it in both, so the storefront and the cart report the same brand.
+     *
+     * @api
+     */
+    public function getBrandAttributeKey(): string
+    {
+        return static::BRAND_ATTRIBUTE_KEY;
     }
 }

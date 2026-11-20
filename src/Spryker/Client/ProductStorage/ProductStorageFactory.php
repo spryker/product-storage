@@ -14,6 +14,8 @@ use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStorageClien
 use Spryker\Client\ProductStorage\Dependency\Client\ProductStorageToStoreClientInterface;
 use Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilEncodingServiceInterface;
 use Spryker\Client\ProductStorage\Dependency\Service\ProductStorageToUtilSanitizeServiceInterface;
+use Spryker\Client\ProductStorage\Expander\ProductViewProductAbstractExpander;
+use Spryker\Client\ProductStorage\Expander\ProductViewProductAbstractExpanderInterface;
 use Spryker\Client\ProductStorage\Filter\ProductAbstractAttributeMapRestrictionFilter;
 use Spryker\Client\ProductStorage\Filter\ProductAbstractAttributeMapRestrictionFilterInterface;
 use Spryker\Client\ProductStorage\Filter\ProductAttributeFilter;
@@ -30,6 +32,10 @@ use Spryker\Client\ProductStorage\Mapper\ProductStorageToProductConcreteTransfer
 use Spryker\Client\ProductStorage\Mapper\ProductVariantExpander;
 use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcher;
 use Spryker\Client\ProductStorage\ProductConcreteSearch\ProductConcreteStorageCatalogSearcherInterface;
+use Spryker\Client\ProductStorage\Resolver\ProductBrandResolver;
+use Spryker\Client\ProductStorage\Resolver\ProductBrandResolverInterface;
+use Spryker\Client\ProductStorage\Resolver\ProductSelectedVariantAttributesResolver;
+use Spryker\Client\ProductStorage\Resolver\ProductSelectedVariantAttributesResolverInterface;
 use Spryker\Client\ProductStorage\Resolver\SelectedProductAttributesResolver;
 use Spryker\Client\ProductStorage\Resolver\SelectedProductAttributesResolverInterface;
 use Spryker\Client\ProductStorage\Storage\ProductAbstractStorageReader;
@@ -98,6 +104,7 @@ class ProductStorageFactory extends AbstractFactory
         return new ProductConcreteViewTransferFinder(
             $this->createProductConcreteStorageReader(),
             $this->createProductStorageDataMapper(),
+            $this->createProductViewProductAbstractExpander(),
         );
     }
 
@@ -117,12 +124,33 @@ class ProductStorageFactory extends AbstractFactory
         );
     }
 
+    public function createProductViewProductAbstractExpander(): ProductViewProductAbstractExpanderInterface
+    {
+        return new ProductViewProductAbstractExpander(
+            $this->createProductAbstractStorageReader(),
+            $this->getStoreClient(),
+            $this->createProductSelectedVariantAttributesResolver(),
+            $this->createProductBrandResolver(),
+        );
+    }
+
+    public function createProductSelectedVariantAttributesResolver(): ProductSelectedVariantAttributesResolverInterface
+    {
+        return new ProductSelectedVariantAttributesResolver();
+    }
+
+    public function createProductBrandResolver(): ProductBrandResolverInterface
+    {
+        return new ProductBrandResolver($this->getConfig());
+    }
+
     public function createProductAbstractViewTransferFinder(): ProductViewTransferFinderInterface
     {
         return new ProductAbstractViewTransferFinder(
             $this->createProductAbstractStorageReader(),
             $this->createProductStorageDataMapper(),
             $this->getStoreClient(),
+            $this->createProductViewProductAbstractExpander(),
         );
     }
 
@@ -135,6 +163,8 @@ class ProductStorageFactory extends AbstractFactory
             $this->getStorageProductExpanderPlugins(),
             $this->createProductAbstractAttributeMapRestrictionFilter(),
             $this->getLocaleClient(),
+            $this->createProductBrandResolver(),
+            $this->createProductSelectedVariantAttributesResolver(),
         );
     }
 
@@ -147,6 +177,8 @@ class ProductStorageFactory extends AbstractFactory
             $this->getStorageProductExpanderPlugins(),
             $this->createProductAbstractAttributeMapRestrictionFilter(),
             $this->getLocaleClient(),
+            $this->createProductBrandResolver(),
+            $this->createProductSelectedVariantAttributesResolver(),
         );
     }
 

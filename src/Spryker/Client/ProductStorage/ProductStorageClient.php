@@ -533,4 +533,21 @@ class ProductStorageClient extends AbstractClient implements ProductStorageClien
     {
         return $this->getFactory()->createProductStorageMultiReader()->getRawProductCollection($keys);
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param array<\Generated\Shared\Transfer\ProductViewTransfer> $productViewTransfers
+     * @param string $localeName
+     *
+     * @return array<\Generated\Shared\Transfer\ProductViewTransfer>
+     */
+    public function expandProductViewTransfersWithProductAbstract(array $productViewTransfers, string $localeName): array
+    {
+        return $this->getFactory()
+            ->createProductViewProductAbstractExpander()
+            ->expandProductViewTransfersWithProductAbstract($productViewTransfers, $localeName);
+    }
 }
